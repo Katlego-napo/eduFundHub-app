@@ -2,13 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SearchResultsView from "@/components/SearchResultsView";
-import type { PastPaper } from "@/lib/types/pastPaper";
+import type { Quiz } from "@/lib/types/quiz";
 import type { Bursary } from "@/lib/types/bursary";
-import type { BlogPost } from "@/lib/types/blog";
 
 export const metadata = {
   title: "Search | EduFund Hub",
-  description: "Search past papers, bursaries, and articles on EduFund Hub.",
+  description: "Search quizzes and bursaries on EduFund Hub.",
 };
 
 export default async function SearchPage({
@@ -19,18 +18,19 @@ export default async function SearchPage({
   const { q } = await searchParams;
   const query = (q ?? "").trim();
 
-  let papers: PastPaper[] = [];
+  let quizzes: Quiz[] = [];
   let bursaries: Bursary[] = [];
-  let posts: BlogPost[] = [];
 
   if (query) {
     const supabase = await createClient();
 
-    const [papersRes, bursariesRes, postsRes] = await Promise.all([
+    const [quizzesRes, bursariesRes] = await Promise.all([
       supabase
-        .from("past_papers")
+        .from("quizzes")
         .select("*")
-        .or(`subject.ilike.%${query}%,grade.ilike.%${query}%,year.ilike.%${query}%`)
+        .or(
+          `title.ilike.%${query}%,subject.ilike.%${query}%,grade.ilike.%${query}%,topic.ilike.%${query}%`
+        )
         .order("created_at", { ascending: false }),
       supabase
         .from("bursaries")
@@ -39,16 +39,10 @@ export default async function SearchPage({
           `name.ilike.%${query}%,funder.ilike.%${query}%,field_of_study.ilike.%${query}%,province.ilike.%${query}%`
         )
         .order("closing_date", { ascending: true }),
-      supabase
-        .from("blog_posts")
-        .select("*")
-        .or(`title.ilike.%${query}%,category.ilike.%${query}%,excerpt.ilike.%${query}%`)
-        .order("created_at", { ascending: false }),
     ]);
 
-    papers = papersRes.data ?? [];
+    quizzes = quizzesRes.data ?? [];
     bursaries = bursariesRes.data ?? [];
-    posts = postsRes.data ?? [];
   }
 
   return (
@@ -69,7 +63,7 @@ export default async function SearchPage({
         </section>
 
         <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-          <SearchResultsView query={query} papers={papers} bursaries={bursaries} posts={posts} />
+          <SearchResultsView query={query} quizzes={quizzes} bursaries={bursaries} />
         </section>
       </main>
       <Footer />

@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EduFund Hub | Past Papers & Bursaries for South African Students",
+  title: "EduFund Hub | Quizzes & Bursaries for South African Students",
   description:
-    "Access past examination papers, memorandums, the latest bursary opportunities, and career guidance — all in one place for South African students.",
+    "Access quiz based questions for your dedicated subjects and the latest bursary opportunities, all in one place for South African students.",
   openGraph: {
     title: "EduFund Hub",
     description:
-      "Your gateway to academic success — past papers, bursaries, and study resources.",
+      "Your gateway to academic success Quizzes, bursaries, and study resources.",
     type: "website",
   },
 };

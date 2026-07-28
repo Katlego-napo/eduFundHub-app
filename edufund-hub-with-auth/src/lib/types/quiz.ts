@@ -10,6 +10,7 @@ export type Quiz = {
   title: string;
   subject: string;
   grade: string;
+  topic?: string | null;
   questions: QuizQuestion[];
   created_by: string | null;
   created_at: string;

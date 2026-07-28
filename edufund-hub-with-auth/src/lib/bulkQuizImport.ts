@@ -7,6 +7,7 @@ export type NormalizedQuizQuestion = {
 
 export type NormalizedQuiz = {
   title: string;
+  topic: string | null;
   questions: NormalizedQuizQuestion[];
 };
 
@@ -145,7 +146,7 @@ function normalizeQuizItem(raw: unknown, index: number): ParsedBulkItem {
     questions.push(result.question);
   }
 
-  return { ok: true, index, quiz: { title, questions } };
+  return { ok: true, index, quiz: { title, topic: typeof item.topic === "string" && item.topic.trim() ? item.topic.trim() : null, questions } };
 }
 
 export function parseBulkQuizJson(raw: string): ParseBulkResult {

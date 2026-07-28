@@ -52,7 +52,7 @@ export default function Hero() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 type="text"
-                placeholder="Search 'Grade 12 Mathematics 2025' or 'NSFAS bursary'..."
+                placeholder="Search 'Trigonometry quiz' or 'NSFAS bursary'..."
                 className="w-full min-w-0 bg-transparent py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
               />
               <button
@@ -73,11 +73,11 @@ export default function Hero() {
               AI Study Assistant
             </a>
             <a
-              href="/past-papers"
+              href="/quizzes"
               className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-primary transition-transform hover:scale-[1.02] sm:w-auto"
             >
               <FileText size={16} />
-              Browse Study Materials
+              Browse Quizzes
             </a>
             <a
               href="/bursaries"

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
 import Header from "@/components/Header";
+import SubjectStrengthsCard from "@/components/SubjectStrengthsCard";
 import Link from "next/link";
 import {
   UploadCloud,
@@ -17,18 +18,11 @@ import {
 // percentage reads fine in the middle (e.g. "Top 20%") but gets
 // confusing at the edges — "Top 100%" sounds like a good score when it
 // actually means last place. Bands avoid that ambiguity entirely.
-function formatRankBand(topPercent: number): string {
-  if (topPercent <= 10) return "Top 10%";
-  if (topPercent <= 25) return "Top 25%";
-  if (topPercent <= 50) return "Top Half";
-  return "Keep Practicing";
-}
-
 export default async function DashboardPage() {
   // Below this many total students (overall, or within a subject), a
   // percentile ranking is more confusing than helpful, so it's hidden
   // until there's a meaningful group to compare against.
-  const MIN_STUDENTS_FOR_RANK = 2;
+  const MIN_STUDENTS_FOR_RANK = 3;
 
   const { user, isAdmin } = await getCurrentUserWithRole();
 
@@ -49,7 +43,7 @@ export default async function DashboardPage() {
 
   const { data: quizAttempts } = await supabase
     .from("quiz_attempts")
-    .select("score, total, subject")
+    .select("score, total, subject, topic")
     .eq("user_id", user.id);
 
   const totalQuizzes = quizAttempts?.length ?? 0;
@@ -81,6 +75,42 @@ export default async function DashboardPage() {
     }))
     .sort((a, b) => b.percent - a.percent);
   const strongestSubject = subjectStrengths[0] ?? null;
+
+  // Topic strength: per-subject breakdown — for each subject, build a
+  // map of topic → average score %, so the dashboard can show a
+  // dropdown that drills down from subject into specific topics.
+  // Only attempts that have both a subject and a topic are included.
+  const topicStrengths = new Map<
+    string,
+    { topic: string; percent: number }[]
+  >();
+  const bySubjectTopic = new Map<
+    string,
+    Map<string, { totalScore: number; totalQuestions: number }>
+  >();
+  for (const attempt of quizAttempts ?? []) {
+    if (!attempt.subject || !attempt.topic) continue;
+    if (!bySubjectTopic.has(attempt.subject)) {
+      bySubjectTopic.set(attempt.subject, new Map());
+    }
+    const topicMap = bySubjectTopic.get(attempt.subject)!;
+    const existing = topicMap.get(attempt.topic) ?? {
+      totalScore: 0,
+      totalQuestions: 0,
+    };
+    existing.totalScore += attempt.score;
+    existing.totalQuestions += attempt.total;
+    topicMap.set(attempt.topic, existing);
+  }
+  for (const [subject, topicMap] of bySubjectTopic.entries()) {
+    const topics = Array.from(topicMap.entries())
+      .map(([topic, { totalScore, totalQuestions }]) => ({
+        topic,
+        percent: Math.round((totalScore / totalQuestions) * 100),
+      }))
+      .sort((a, b) => b.percent - a.percent);
+    topicStrengths.set(subject, topics);
+  }
 
   // Rank: computed across ALL students server-side using the
   // service-role client (bypasses RLS, which normally restricts each
@@ -289,7 +319,7 @@ export default async function DashboardPage() {
             <div>
               <p className="font-display font-semibold text-white">AI Study Assistant</p>
               <p className="text-sm text-white/75">
-                Upload notes or a past paper, ask questions or generate a practice quiz.
+                Upload notes or a past paper — ask questions or generate a practice quiz.
               </p>
             </div>
           </div>
@@ -357,52 +387,12 @@ export default async function DashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-surface p-6">
-            <h3 className="font-display text-sm font-semibold text-foreground">
-              Subject Strengths
-            </h3>
-            {subjectStrengths.length === 0 ? (
-              <p className="mt-2 text-xs text-muted">
-                Take a few quizzes from the Quizzes page to see which subjects
-                you&apos;re strongest in.
-              </p>
-            ) : (
-              <>
-                <p className="mt-2 text-sm text-muted">
-                  Strongest:{" "}
-                  <span className="font-semibold text-foreground">
-                    {strongestSubject!.subject} ({strongestSubject!.percent}%)
-                  </span>
-                </p>
-                <div className="mt-3 space-y-2.5">
-                  {subjectStrengths.slice(0, 4).map((s) => {
-                    const subjRank = subjectRanks[s.subject];
-                    return (
-                      <div key={s.subject}>
-                        <div className="flex items-center justify-between text-xs text-muted">
-                          <span>{s.subject}</span>
-                          <span className="flex items-center gap-2">
-                            <span>{s.percent}%</span>
-                            {subjRank && (
-                              <span className="rounded-full bg-secondary/10 px-2 py-0.5 font-medium text-secondary">
-                                {formatRankBand(subjRank.topPercent)}
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-foreground/5">
-                          <div
-                            className="h-full rounded-full bg-secondary"
-                            style={{ width: `${s.percent}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
+          <SubjectStrengthsCard
+            subjectStrengths={subjectStrengths}
+            topicStrengthsMap={Object.fromEntries(topicStrengths)}
+            strongestSubject={strongestSubject}
+            subjectRanks={subjectRanks}
+          />
         </div>
 
         {isAdmin && (

@@ -9,11 +9,11 @@ import type { User } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
+  // { label: "Past Papers", href: "/past-papers" },
   { label: "Quizzes", href: "/quizzes" },
-  { label: "AI Study Assistant", href: "/study-assistant" },
-  { label: "Study Materials", href: "/past-papers" },
+    { label: "AI Study Assistant", href: "/study-assistant" },
   { label: "Bursaries", href: "/bursaries" },
-  { label: "Blog", href: "/blog" },
+ // { label: "Blog", href: "/blog" },
   { label: "About Us", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
@@ -168,7 +168,7 @@ export default function Header() {
               autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search past papers or bursaries..."
+              placeholder="Search quizzes or bursaries..."
               className="w-full min-w-0 bg-transparent py-1.5 text-sm text-foreground placeholder:text-muted/70 focus:outline-none"
             />
             <button

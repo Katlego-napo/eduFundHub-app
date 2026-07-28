@@ -65,9 +65,9 @@ export default function Footer() {
             <ul className="mt-3 space-y-2 text-sm text-muted">
               <li><Link href="/quizzes" className="hover:text-primary">Quizzes</Link></li>
               <li><Link href="/study-assistant" className="hover:text-primary">AI Study Assistant</Link></li>
-              <li><Link href="/past-papers" className="hover:text-primary">Study Materials</Link></li>
+              {/* <li><Link href="/past-papers" className="hover:text-primary">Study Materials</Link></li> */}
               <li><Link href="/bursaries" className="hover:text-primary">Bursaries</Link></li>
-              <li><Link href="/blog" className="hover:text-primary">Blog</Link></li>
+              {/* <li><Link href="/blog" className="hover:text-primary">Blog</Link></li>  */}
               <li><Link href="/about" className="hover:text-primary">About Us</Link></li>
               
             </ul>

@@ -2,8 +2,8 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Stats from "@/components/Stats";
 import FeaturedBursaries from "@/components/FeaturedBursaries";
-import LatestPapers from "@/components/LatestPapers";
-import BlogPreview from "@/components/BlogPreview";
+// import LatestPapers from "@/components/LatestPapers";
+// import BlogPreview from "@/components/BlogPreview";
 import NewsletterCTA from "@/components/NewsletterCTA";
 import Footer from "@/components/Footer";
 
@@ -15,8 +15,8 @@ export default function Home() {
         <Hero />
         <Stats />
         <FeaturedBursaries />
-        <LatestPapers />
-        <BlogPreview />
+        {/* <LatestPapers /> */}
+        {/* <BlogPreview /> */}
         <NewsletterCTA />
       </main>
       <Footer />

@@ -50,6 +50,7 @@ export default function UploadQuizForm() {
   // Shared across both modes
   const [subject, setSubject] = useState("");
   const [grade, setGrade] = useState<string>(QUIZ_GRADES[4]); // Grade 12 default
+  const [topic, setTopic] = useState("");
 
   // Single-entry mode state
   const [title, setTitle] = useState("");
@@ -118,6 +119,7 @@ export default function UploadQuizForm() {
           title,
           subject,
           grade,
+          topic: topic.trim() || null,
           questions: questions.map((q) => ({
             question: q.question.trim(),
             options: q.options.map((o) => o.trim()),
@@ -186,6 +188,7 @@ export default function UploadQuizForm() {
             title: item.quiz.title,
             subject,
             grade,
+            topic: item.quiz.topic ?? (topic.trim() || null),
             questions: item.quiz.questions,
           }),
         });
@@ -251,7 +254,7 @@ export default function UploadQuizForm() {
       </div>
 
       {/* Shared fields */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
           <label className={labelClass}>Subject</label>
           <input
@@ -264,6 +267,20 @@ export default function UploadQuizForm() {
           {mode === "bulk" && (
             <p className="mt-1 text-xs text-muted">
               Applied to every quiz in the pasted batch.
+            </p>
+          )}
+        </div>
+        <div>
+          <label className={labelClass}>Topic <span className="font-normal text-muted">(optional)</span></label>
+          <input
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder="Trigonometry"
+            className={inputClass}
+          />
+          {mode === "bulk" && (
+            <p className="mt-1 text-xs text-muted">
+              Used as fallback if not in the JSON. Individual quizzes can override via a <code className="rounded bg-foreground/5 px-1">topic</code> field.
             </p>
           )}
         </div>
