@@ -48,17 +48,17 @@ export default function ContactPage() {
                   <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Mail size={16} />
                   </span>
-                  <a href="mailto:support@edufundhub.co.za" className="hover:text-primary">
-                    support@edufundhub.co.za
+                  <a href="mailto:admin@edufundhub.co.za" className="hover:text-primary">
+                    admin@edufundhub.co.za
                   </a>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  {/* <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Phone size={16} />
-                  </span>
-                  <a href="tel:+27210000000" className="hover:text-primary">
+                  </span> */}
+                  {/* <a href="tel:+27210000000" className="hover:text-primary">
                     +27 21 000 0000
-                  </a>
+                  </a> */}
                 </li>
               </ul>
               <p className="mt-5 text-sm text-muted">

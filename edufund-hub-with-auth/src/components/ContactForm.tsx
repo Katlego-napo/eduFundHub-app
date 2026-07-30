@@ -19,7 +19,7 @@ export default function ContactForm() {
       `${message}\n\n—\nFrom: ${name || "N/A"}\nEmail: ${email || "N/A"}`
     );
 
-    window.location.href = `mailto:support@edufundhub.co.za?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:admin@edufundhub.co.za?subject=${subject}&body=${body}`;
   }
 
   return (

@@ -79,11 +79,11 @@ export default function Footer() {
             </h4>
             <ul className="mt-3 space-y-2 text-sm text-muted">
               <li className="flex items-center gap-2">
-                <Mail size={14} /> support@edufundhub.co.za
+                <Mail size={14} /> admin@edufundhub.co.za
               </li>
-              <li className="flex items-center gap-2">
+              {/* <li className="flex items-center gap-2">
                 <Phone size={14} /> +27 21 000 0000
-              </li>
+              </li> */}
             </ul>
           </div>
 
