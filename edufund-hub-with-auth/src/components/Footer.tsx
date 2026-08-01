@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GraduationCap, Mail, Phone } from "lucide-react";
+import { GraduationCap, Mail } from "lucide-react";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -9,10 +9,10 @@ function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function TwitterIcon(props: React.SVGProps<SVGSVGElement>) {
+function TikTokIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M18.9 3h3.1l-6.77 7.73L23.3 21h-6.7l-5.24-6.85L5.2 21H2.1l7.24-8.27L1.7 3h6.86l4.74 6.27L18.9 3Zm-2.18 16.17h1.72L7.36 4.74H5.5l11.22 14.43Z" />
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.73a4.85 4.85 0 0 1-1.01-.04Z" />
     </svg>
   );
 }
@@ -49,8 +49,8 @@ export default function Footer() {
               <a href="#" aria-label="Facebook" className="text-muted hover:text-primary">
                 <FacebookIcon className="h-[18px] w-[18px]" />
               </a>
-              <a href="#" aria-label="Twitter" className="text-muted hover:text-primary">
-                <TwitterIcon className="h-[18px] w-[18px]" />
+              <a href="#" aria-label="TikTok" className="text-muted hover:text-primary">
+                <TikTokIcon className="h-[18px] w-[18px]" />
               </a>
               <a href="#" aria-label="Instagram" className="text-muted hover:text-primary">
                 <InstagramIcon className="h-[18px] w-[18px]" />
@@ -69,7 +69,6 @@ export default function Footer() {
               <li><Link href="/bursaries" className="hover:text-primary">Bursaries</Link></li>
               {/* <li><Link href="/blog" className="hover:text-primary">Blog</Link></li>  */}
               <li><Link href="/about" className="hover:text-primary">About Us</Link></li>
-              
             </ul>
           </div>
 
@@ -81,9 +80,6 @@ export default function Footer() {
               <li className="flex items-center gap-2">
                 <Mail size={14} /> admin@edufundhub.co.za
               </li>
-              {/* <li className="flex items-center gap-2">
-                <Phone size={14} /> +27 21 000 0000
-              </li> */}
             </ul>
           </div>
 
