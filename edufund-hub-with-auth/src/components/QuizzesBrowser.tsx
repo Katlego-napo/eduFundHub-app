@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import MathText from "@/components/MathText";
+import DiagramRenderer from "@/components/DiagramRenderer";
 import { hasUsedFreeQuizSample, markFreeQuizSampleUsed } from "@/lib/freeQuizSample";
 import type { Quiz } from "@/lib/types/quiz";
 import {
@@ -31,12 +32,14 @@ export default function QuizzesBrowser({
   quizzes,
   isAdmin = false,
   isLoggedIn = false,
+  isSubscribed = false,
   initialSavedQuizIds = [],
   initialAttemptedQuizzes = {},
 }: {
   quizzes: Quiz[];
   isAdmin?: boolean;
   isLoggedIn?: boolean;
+  isSubscribed?: boolean;
   initialSavedQuizIds?: string[];
   initialAttemptedQuizzes?: AttemptedMap;
 }) {
@@ -57,8 +60,10 @@ export default function QuizzesBrowser({
   const [sampleUsed, setSampleUsed] = useState(false);
 
   useEffect(() => {
-    if (!isLoggedIn) setSampleUsed(hasUsedFreeQuizSample());
-  }, [isLoggedIn]);
+    // Non-subscribers (both anonymous and logged-in) share the same
+    // one-free-quiz gate tracked in localStorage.
+    if (!isSubscribed) setSampleUsed(hasUsedFreeQuizSample());
+  }, [isSubscribed]);
 
   const subjects = useMemo(
     () => ["All", ...Array.from(new Set(allQuizzes.map((q) => q.subject)))],
@@ -159,7 +164,7 @@ export default function QuizzesBrowser({
         onSubmitted={handleSubmitted}
         reviewMode={!!existing}
         initialAnswers={existing?.answers}
-        isLoggedIn={isLoggedIn}
+        isLoggedIn={isSubscribed}
         onFreeSampleUsed={() => {
           markFreeQuizSampleUsed();
           setSampleUsed(true);
@@ -170,25 +175,29 @@ export default function QuizzesBrowser({
 
   return (
     <div>
-      {!isLoggedIn && sampleUsed && (
+      {!isSubscribed && sampleUsed && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-secondary/30 bg-secondary/10 px-5 py-4">
           <p className="text-sm text-foreground">
-            <strong>You&apos;ve tried your free sample quiz!</strong> Sign up free to
-            unlock unlimited quizzes, save your progress, and see your ranking.
+            <strong>You&apos;ve tried your free sample quiz!</strong>{" "}
+            {isLoggedIn
+              ? "Subscribe to unlock unlimited quizzes and track your progress."
+              : "Sign up free or subscribe to unlock unlimited quizzes."}
           </p>
           <div className="flex shrink-0 gap-2">
             <a
-              href="/signup"
+              href="/pricing"
               className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-light"
             >
-              Sign Up Free
+              View Plans
             </a>
-            <a
-              href="/login"
-              className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5"
-            >
-              Log In
-            </a>
+            {!isLoggedIn && (
+              <a
+                href="/login"
+                className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5"
+              >
+                Log In
+              </a>
+            )}
           </div>
         </div>
       )}
@@ -304,20 +313,20 @@ export default function QuizzesBrowser({
                     Completed &middot; {result.score}/{result.total}
                     <Eye size={14} className="ml-0.5" />
                   </button>
-                ) : !isLoggedIn && sampleUsed ? (
+                ) : !isSubscribed && sampleUsed ? (
                   <a
-                    href="/signup"
+                    href="/pricing"
                     className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-full bg-primary/10 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/15"
                   >
                     <Lock size={14} />
-                    Sign Up to Unlock
+                    Subscribe to Unlock
                   </a>
                 ) : (
                   <button
                     onClick={() => setActiveQuiz(quiz)}
                     className="mt-5 w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-light"
                   >
-                    {!isLoggedIn ? "Try Free Sample" : "Take Quiz"}
+                    {!isSubscribed ? "Try Free Sample" : "Take Quiz"}
                   </button>
                 )}
               </div>
@@ -415,6 +424,7 @@ export function QuizTaker({
         body: JSON.stringify({
           quizId: quiz.id,
           subject: quiz.subject,
+          topic: quiz.topic ?? null,
           score,
           total: quiz.questions.length,
           answers: answersArray,
@@ -501,6 +511,7 @@ export function QuizTaker({
             <div key={qi} className="border-t border-border pt-5 first:border-t-0 first:pt-0">
               <p className="font-medium text-foreground">
                 {qi + 1}. <MathText text={q.question} />
+                {q.diagram && <DiagramRenderer diagram={q.diagram} />}
               </p>
               <div className="mt-3 space-y-2">
                 {q.options.map((opt, oi) => {
@@ -576,15 +587,15 @@ export function QuizTaker({
                   Enjoyed that? 🎉
                 </p>
                 <p className="mt-1 text-sm text-muted">
-                  Sign up free to unlock unlimited quizzes, track your progress, and
-                  see how you rank against other students.
+                  Sign up free and subscribe to unlock unlimited quizzes, track
+                  your progress, and see how you rank against other students.
                 </p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2.5">
                   <a
-                    href="/signup"
+                    href="/pricing"
                     className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-light"
                   >
-                    Sign Up Free
+                    View Plans
                   </a>
                   <a
                     href="/login"

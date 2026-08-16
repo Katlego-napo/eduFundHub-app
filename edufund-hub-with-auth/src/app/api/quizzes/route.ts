@@ -4,6 +4,32 @@ import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
 import { revalidatePath } from "next/cache";
 import type { QuizQuestion } from "@/lib/types/quiz";
 
+const DIAGRAM_TYPES = new Set([
+  "triangle",
+  "circle",
+  "coordinate-plane",
+  "number-line",
+  "vector",
+  "circuit",
+]);
+
+// diagram is optional on every question — absent/null both pass. If present,
+// only the envelope shape is checked here; DiagramRenderer re-validates the
+// type-specific fields defensively before drawing anything, so a borderline
+// diagram can never break the page for a student.
+function isValidDiagram(d: unknown): boolean {
+  if (d === null || d === undefined) return true;
+  if (typeof d !== "object") return false;
+  const diagram = d as Record<string, unknown>;
+  return (
+    diagram.required === true &&
+    typeof diagram.type === "string" &&
+    DIAGRAM_TYPES.has(diagram.type) &&
+    typeof diagram.data === "object" &&
+    diagram.data !== null
+  );
+}
+
 function isValidQuestion(q: unknown): q is QuizQuestion {
   if (typeof q !== "object" || q === null) return false;
   const question = q as Record<string, unknown>;
@@ -16,7 +42,8 @@ function isValidQuestion(q: unknown): q is QuizQuestion {
     typeof question.correctIndex === "number" &&
     question.correctIndex >= 0 &&
     question.correctIndex <= 3 &&
-    typeof question.explanation === "string"
+    typeof question.explanation === "string" &&
+    isValidDiagram(question.diagram)
   );
 }
 

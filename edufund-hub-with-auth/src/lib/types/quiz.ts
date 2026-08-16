@@ -1,8 +1,14 @@
+export type QuizDiagram = {
+  type: "svg";
+  content: string; // sanitized SVG markup
+};
+
 export type QuizQuestion = {
   question: string;
   options: string[];
   correctIndex: number;
   explanation: string;
+  diagram?: QuizDiagram | null;
 };
 
 export type Quiz = {

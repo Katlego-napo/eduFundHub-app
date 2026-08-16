@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
+import { getSubscriptionStatus } from "@/lib/auth/getSubscriptionStatus";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuizzesBrowser, { type AttemptedMap } from "@/components/QuizzesBrowser";
@@ -22,6 +23,16 @@ export default async function QuizzesPage() {
 
   const quizzes: Quiz[] = error ? [] : (data ?? []);
 
+  // Check subscription — admins always get full access, non-subscribers
+  // (whether logged in or not) get the same one-free-quiz treatment that
+  // anonymous visitors already have via the localStorage gate in
+  // QuizzesBrowser. This means no separate gating logic is needed in this
+  // page for logged-in non-subscribers — QuizzesBrowser already handles it
+  // via the isLoggedIn + sampleUsed flags.
+  const { isSubscribed } = user
+    ? await getSubscriptionStatus()
+    : { isSubscribed: false };
+
   let savedQuizIds: string[] = [];
   let attemptedQuizzes: AttemptedMap = {};
 
@@ -39,8 +50,6 @@ export default async function QuizzesPage() {
       .not("quiz_id", "is", null)
       .order("created_at", { ascending: false });
 
-    // Keep only the most recent attempt per quiz (rows are already
-    // ordered newest-first, so the first time we see a quiz_id wins).
     for (const attempt of attempts ?? []) {
       if (!attempt.quiz_id || attemptedQuizzes[attempt.quiz_id]) continue;
       attemptedQuizzes[attempt.quiz_id] = {
@@ -61,7 +70,7 @@ export default async function QuizzesPage() {
               Practice Quizzes
             </h1>
             <p className="mt-2 text-white/75">
-              Test your knowledge with multiple-choice quizzes.
+              Test your knowledge with multiple-choice quizzes — completely free to try.
             </p>
           </div>
         </section>
@@ -76,6 +85,7 @@ export default async function QuizzesPage() {
               quizzes={quizzes}
               isAdmin={isAdmin}
               isLoggedIn={!!user}
+              isSubscribed={isSubscribed}
               initialSavedQuizIds={savedQuizIds}
               initialAttemptedQuizzes={attemptedQuizzes}
             />

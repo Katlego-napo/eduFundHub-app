@@ -3,6 +3,7 @@ export type NormalizedQuizQuestion = {
   options: string[];
   correctIndex: number;
   explanation: string;
+  diagram?: { type: "svg"; content: string } | null;
 };
 
 export type NormalizedQuiz = {
@@ -51,10 +52,10 @@ function letterToIndex(letter: string, optionCount: number): number | null {
   return null;
 }
 
-function normalizeQuestion(
+async function normalizeQuestion(
   raw: unknown,
   qIndex: number
-): { ok: true; question: NormalizedQuizQuestion } | { ok: false; error: string } {
+): Promise<{ ok: true; question: NormalizedQuizQuestion } | { ok: false; error: string }> {
   if (typeof raw !== "object" || raw === null) {
     return { ok: false, error: `Question ${qIndex + 1}: not a valid object.` };
   }
@@ -110,13 +111,44 @@ function normalizeQuestion(
 
   const explanation = typeof q.explanation === "string" ? q.explanation : "";
 
+  // Optional diagram field — questions without it continue to work exactly
+  // as before. If present, it must be a valid, sanitized SVG.
+  let diagram: { type: "svg"; content: string } | null = null;
+  if (q.diagram !== undefined && q.diagram !== null) {
+    const raw = q.diagram as Record<string, unknown>;
+    // Accept both { type: "svg", content: "..." } and a bare SVG string.
+    const svgContent =
+      typeof raw.content === "string"
+        ? raw.content
+        : typeof q.diagram === "string"
+        ? (q.diagram as string)
+        : null;
+
+    if (!svgContent) {
+      return {
+        ok: false,
+        error: `Question ${qIndex + 1}: diagram must have a "content" field containing SVG markup.`,
+      };
+    }
+
+    const { sanitizeSvg } = await import("@/lib/svgSanitize");
+    const result = sanitizeSvg(svgContent);
+    if (!result.ok) {
+      return {
+        ok: false,
+        error: `Question ${qIndex + 1}: invalid diagram — ${result.error}`,
+      };
+    }
+    diagram = { type: "svg", content: result.svg };
+  }
+
   return {
     ok: true,
-    question: { question: questionText, options, correctIndex, explanation },
+    question: { question: questionText, options, correctIndex, explanation, diagram },
   };
 }
 
-function normalizeQuizItem(raw: unknown, index: number): ParsedBulkItem {
+async function normalizeQuizItem(raw: unknown, index: number): Promise<ParsedBulkItem> {
   if (typeof raw !== "object" || raw === null) {
     return { ok: false, index, label: `Item ${index + 1}`, error: "Not a valid object." };
   }
@@ -139,7 +171,7 @@ function normalizeQuizItem(raw: unknown, index: number): ParsedBulkItem {
 
   const questions: NormalizedQuizQuestion[] = [];
   for (let i = 0; i < questionsRaw.length; i++) {
-    const result = normalizeQuestion(questionsRaw[i], i);
+    const result = await normalizeQuestion(questionsRaw[i], i);
     if (!result.ok) {
       return { ok: false, index, label, error: result.error };
     }
@@ -149,7 +181,7 @@ function normalizeQuizItem(raw: unknown, index: number): ParsedBulkItem {
   return { ok: true, index, quiz: { title, topic: typeof item.topic === "string" && item.topic.trim() ? item.topic.trim() : null, questions } };
 }
 
-export function parseBulkQuizJson(raw: string): ParseBulkResult {
+export async function parseBulkQuizJson(raw: string): Promise<ParseBulkResult> {
   const normalized = normalizeLatexBackslashes(raw);
 
   let parsed: unknown;
@@ -174,6 +206,6 @@ export function parseBulkQuizJson(raw: string): ParseBulkResult {
     return { ok: false, error: "The pasted array is empty — nothing to import." };
   }
 
-  const items = parsed.map((raw, index) => normalizeQuizItem(raw, index));
+  const items = await Promise.all(parsed.map((raw, index) => normalizeQuizItem(raw, index)));
   return { ok: true, items };
 }

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
+import { getSubscriptionStatus } from "@/lib/auth/getSubscriptionStatus";
 import Header from "@/components/Header";
 import SubjectStrengthsCard from "@/components/SubjectStrengthsCard";
 import Link from "next/link";
@@ -12,6 +13,7 @@ import {
   ArrowRight,
   Brain,
   FileQuestion,
+  Clock,
 } from "lucide-react";
 
 // Turns a raw "top X%" number into plain, unambiguous language. A raw
@@ -31,6 +33,9 @@ export default async function DashboardPage() {
   }
 
   const supabase = await createClient();
+
+  const { isTrial, trialDaysRemaining } = await getSubscriptionStatus();
+
   const { count: savedBursariesCount } = await supabase
     .from("saved_bursaries")
     .select("id", { count: "exact", head: true })
@@ -275,6 +280,27 @@ export default async function DashboardPage() {
         <p className="mt-1 text-muted">
           Signed in as <span className="font-medium">{user.email}</span>
         </p>
+
+        {isTrial && trialDaysRemaining !== null && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/30 bg-accent/10 px-5 py-4">
+            <div className="flex items-center gap-2 text-sm text-foreground">
+              <Clock size={16} className="text-[#7A5A0A]" />
+              <span>
+                Your <strong>14-day free trial</strong> expires in{" "}
+                <strong>
+                  {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""}
+                </strong>
+                .
+              </span>
+            </div>
+            <Link
+              href="/pricing"
+              className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-light"
+            >
+              View Plans
+            </Link>
+          </div>
+        )}
 
         {rank && rankTier && (
           <div

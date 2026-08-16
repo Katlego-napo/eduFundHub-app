@@ -12,6 +12,7 @@ type DraftQuestion = {
   options: [string, string, string, string];
   correctIndex: number;
   explanation: string;
+  diagram: string; // raw SVG string, empty = no diagram
 };
 
 type BulkResultRow = {
@@ -26,6 +27,7 @@ function emptyQuestion(): DraftQuestion {
     options: ["", "", "", ""],
     correctIndex: 0,
     explanation: "",
+    diagram: "",
   };
 }
 
@@ -125,6 +127,9 @@ export default function UploadQuizForm() {
             options: q.options.map((o) => o.trim()),
             correctIndex: q.correctIndex,
             explanation: q.explanation.trim(),
+            diagram: q.diagram.trim()
+              ? { type: "svg", content: q.diagram.trim() }
+              : null,
           })),
         }),
       });
@@ -157,7 +162,7 @@ export default function UploadQuizForm() {
       return;
     }
 
-    const parsed = parseBulkQuizJson(bulkJson);
+    const parsed = await parseBulkQuizJson(bulkJson);
     if (!parsed.ok) {
       setBulkError(parsed.error);
       return;
@@ -416,6 +421,37 @@ export default function UploadQuizForm() {
                         Preview:
                       </span>
                       <MathText text={q.explanation} />
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-3">
+                  <label className={labelClass}>
+                    Diagram{" "}
+                    <span className="font-normal text-muted">(optional — paste SVG markup)</span>
+                  </label>
+                  <p className="mt-0.5 text-xs text-muted">
+                    Paste a raw{" "}
+                    <code className="rounded bg-foreground/5 px-1">&lt;svg&gt;...&lt;/svg&gt;</code>{" "}
+                    block. Shown above the answer options. Leave blank for no diagram.
+                  </p>
+                  <textarea
+                    rows={4}
+                    value={q.diagram}
+                    onChange={(e) => updateQuestion(qi, { diagram: e.target.value })}
+                    placeholder="<svg viewBox='0 0 200 100' xmlns='http://www.w3.org/2000/svg'>...</svg>"
+                    spellCheck={false}
+                    className={`${inputClass} font-mono text-xs`}
+                  />
+                  {q.diagram.trim().startsWith("<svg") && (
+                    <div className="mt-1.5 overflow-auto rounded-lg border border-dashed border-border bg-surface p-3">
+                      <span className="mb-1 block text-xs font-medium uppercase text-muted">
+                        Preview:
+                      </span>
+                      <div
+                        className="max-w-full"
+                        dangerouslySetInnerHTML={{ __html: q.diagram }}
+                      />
                     </div>
                   )}
                 </div>
