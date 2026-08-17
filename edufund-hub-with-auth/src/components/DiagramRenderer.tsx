@@ -28,16 +28,15 @@ export default function DiagramRenderer({ diagram }: { diagram: QuizDiagram }) {
   if (!sanitized) return null;
 
   return (
-    <div
+    <figure
       className="my-3 overflow-hidden rounded-lg border border-border bg-surface p-3"
       style={{ pointerEvents: "none", userSelect: "none" }}
       aria-label="Question diagram"
-      role="img"
     >
       <div
         className="max-w-full [&>svg]:h-auto [&>svg]:max-w-full"
         dangerouslySetInnerHTML={{ __html: sanitized }}
       />
-    </div>
+    </figure>
   );
 }

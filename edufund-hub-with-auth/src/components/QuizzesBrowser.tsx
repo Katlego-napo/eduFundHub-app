@@ -511,8 +511,8 @@ export function QuizTaker({
             <div key={qi} className="border-t border-border pt-5 first:border-t-0 first:pt-0">
               <p className="font-medium text-foreground">
                 {qi + 1}. <MathText text={q.question} />
-                {q.diagram && <DiagramRenderer diagram={q.diagram} />}
               </p>
+              {q.diagram && <DiagramRenderer diagram={q.diagram} />}
               <div className="mt-3 space-y-2">
                 {q.options.map((opt, oi) => {
                   const isSelected = userAnswer === oi;
