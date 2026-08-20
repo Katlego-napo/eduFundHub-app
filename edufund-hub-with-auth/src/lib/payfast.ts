@@ -45,24 +45,33 @@ export const PLAN_CONFIG: Record<
 };
 
 /**
- * Generates the MD5 signature PayFast requires on every request.
- * The signature is an MD5 hash of all the payment fields sorted
- * alphabetically, URL-encoded, concatenated as a query string, with
- * the passphrase appended at the end (if set).
+ * Encodes a string to match PHP's urlencode() exactly, since PayFast's
+ * backend is PHP and validates signatures using urlencode-style escaping.
+ * JS's encodeURIComponent differs on: space, !, ', (, ), *, ~
  */
+function phpUrlEncode(str: string): string {
+  return encodeURIComponent(str)
+    .replace(/%20/g, "+")
+    .replace(/!/g, "%21")
+    .replace(/'/g, "%27")
+    .replace(/\(/g, "%28")
+    .replace(/\)/g, "%29")
+    .replace(/\*/g, "%2A")
+    .replace(/~/g, "%7E");
+}
+
 export function generateSignature(data: Record<string, string>): string {
-  const sorted = Object.keys(data)
-    .sort()
-    .map((k) => `${k}=${encodeURIComponent(data[k]).replace(/%20/g, "+")}`)
+  const pairs = Object.entries(data)
+    .filter(([key, value]) => key !== "signature" && value !== "")
+    .map(([k, v]) => `${k}=${phpUrlEncode(String(v).trim())}`)
     .join("&");
 
   const withPassphrase = PASSPHRASE
-    ? `${sorted}&passphrase=${encodeURIComponent(PASSPHRASE).replace(/%20/g, "+")}`
-    : sorted;
+    ? `${pairs}&passphrase=${phpUrlEncode(PASSPHRASE.trim())}`
+    : pairs;
 
   return crypto.createHash("md5").update(withPassphrase).digest("hex");
 }
-
 /**
  * Builds the complete payment data object for a PayFast subscription
  * checkout, ready to POST to PAYFAST_URL.
@@ -72,6 +81,7 @@ export function buildPaymentData(
   userId: string,
   userEmail: string,
   userName: string
+  
 ): Record<string, string> {
   const config = PLAN_CONFIG[plan];
 
