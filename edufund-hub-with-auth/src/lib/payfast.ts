@@ -93,13 +93,17 @@ export function buildPaymentData(
     notify_url: `${SITE_URL}/api/payfast/notify`,
 
     // Buyer info — pre-fills PayFast's payment form
-    email_address: userEmail,
     name_first: userName.split(" ")[0] ?? userName,
     name_last: userName.split(" ").slice(1).join(" ") || "-",
+    email_address: userEmail,
 
     // Payment details
     amount: config.amount,
     item_name: config.item_name,
+
+     // Custom data — passed back in the ITN so we know which user/plan
+    custom_str1: userId,
+    custom_str2: plan,
 
     // Subscription fields
     subscription_type: config.subscription_type,
@@ -107,9 +111,6 @@ export function buildPaymentData(
     frequency: config.frequency,
     cycles: config.cycles,
 
-    // Custom data — passed back in the ITN so we know which user/plan
-    custom_str1: userId,
-    custom_str2: plan,
   };
 
   // Remove empty values — PayFast signature validation fails if
