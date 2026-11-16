@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Upload, ListChecks, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { QUIZ_GRADES } from "@/lib/types/quiz";
+import { createClient } from "@/lib/supabase/client";
 import MathText from "@/components/MathText";
 import { parseBulkQuizJson } from "@/lib/bulkQuizImport";
 
@@ -34,6 +35,7 @@ function emptyQuestion(): DraftQuestion {
 const BULK_PLACEHOLDER = `[
   {
     "quiz_title": "Algebra, Equations & Inequalities - Part 1",
+    "topic": "Algebra",
     "questions": [
       {
         "question": "What is the value of $\\\\sin(90^\\\\circ)$?",
@@ -53,6 +55,25 @@ export default function UploadQuizForm() {
   const [subject, setSubject] = useState("");
   const [grade, setGrade] = useState<string>(QUIZ_GRADES[4]); // Grade 12 default
   const [topic, setTopic] = useState("");
+
+  // Subjects/topics already in the database, offered as suggestions so
+  // spellings stay consistent ("Algebra" vs "algebra").
+  const [existing, setExisting] = useState<{ subject: string; topic: string | null }[]>([]);
+  useEffect(() => {
+    createClient()
+      .from("quizzes")
+      .select("subject, topic")
+      .then(({ data }) => setExisting(data ?? []));
+  }, []);
+  const subjectOptions = useMemo(
+    () => Array.from(new Set(existing.map((q) => q.subject))).sort(),
+    [existing]
+  );
+  const topicOptions = useMemo(() => {
+    const s = subject.trim().toLowerCase();
+    const rows = s ? existing.filter((q) => q.subject.toLowerCase() === s) : existing;
+    return Array.from(new Set(rows.map((q) => q.topic).filter((t): t is string => !!t))).sort();
+  }, [existing, subject]);
 
   // Single-entry mode state
   const [title, setTitle] = useState("");
@@ -267,8 +288,14 @@ export default function UploadQuizForm() {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Mathematics"
+            list="subject-options"
             className={inputClass}
           />
+          <datalist id="subject-options">
+            {subjectOptions.map((s) => (
+              <option key={s} value={s} />
+            ))}
+          </datalist>
           {mode === "bulk" && (
             <p className="mt-1 text-xs text-muted">
               Applied to every quiz in the pasted batch.
@@ -281,11 +308,20 @@ export default function UploadQuizForm() {
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="Trigonometry"
+            list="topic-options"
             className={inputClass}
           />
+          <datalist id="topic-options">
+            {topicOptions.map((t) => (
+              <option key={t} value={t} />
+            ))}
+          </datalist>
+          <p className="mt-1 text-xs text-muted">
+            Pick an existing topic to keep spelling consistent, or type a new one.
+          </p>
           {mode === "bulk" && (
             <p className="mt-1 text-xs text-muted">
-              Used as fallback if not in the JSON. Individual quizzes can override via a <code className="rounded bg-foreground/5 px-1">topic</code> field.
+              Used for any quiz that has no <code className="rounded bg-foreground/5 px-1">"topic"</code> of its own. To put different quizzes in different topics, add <code className="rounded bg-foreground/5 px-1">"topic": "Algebra"</code> to each quiz in the JSON.
             </p>
           )}
         </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import MathText from "@/components/MathText";
 import DiagramRenderer from "@/components/DiagramRenderer";
+import SubjectTopicBrowser from "@/components/SubjectTopicBrowser";
 import { hasUsedFreeQuizSample, markFreeQuizSampleUsed } from "@/lib/freeQuizSample";
 import type { Quiz } from "@/lib/types/quiz";
 import {
@@ -35,6 +36,9 @@ export default function QuizzesBrowser({
   isSubscribed = false,
   initialSavedQuizIds = [],
   initialAttemptedQuizzes = {},
+  initialSubject = null,
+  initialTopic = null,
+  initialQuizId = null,
 }: {
   quizzes: Quiz[];
   isAdmin?: boolean;
@@ -42,6 +46,9 @@ export default function QuizzesBrowser({
   isSubscribed?: boolean;
   initialSavedQuizIds?: string[];
   initialAttemptedQuizzes?: AttemptedMap;
+  initialSubject?: string | null;
+  initialTopic?: string | null;
+  initialQuizId?: string | null;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -51,13 +58,24 @@ export default function QuizzesBrowser({
   const [gradeFilter, setGradeFilter] = useState("All");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+  // Deep link from the dashboard (?quiz=ID). Only opens quizzes the user has
+  // already completed (review mode), so it can't skip the free-sample limit.
+  const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(() =>
+    initialQuizId && initialAttemptedQuizzes[initialQuizId]
+      ? quizzes.find((q) => q.id === initialQuizId) ?? null
+      : null
+  );
   const [savedIds, setSavedIds] = useState<Set<string>>(
     new Set(initialSavedQuizIds)
   );
   const [savingId, setSavingId] = useState<string | null>(null);
   const [attempted, setAttempted] = useState<AttemptedMap>(initialAttemptedQuizzes);
   const [sampleUsed, setSampleUsed] = useState(false);
+  const [view, setView] = useState<"subjects" | "all">("subjects");
+  const [activeSubject, setActiveSubject] = useState<string | null>(initialSubject);
+  const [activeTopic, setActiveTopic] = useState<string | null>(
+    initialSubject ? initialTopic : null
+  );
 
   useEffect(() => {
     // Non-subscribers (both anonymous and logged-in) share the same
@@ -202,6 +220,40 @@ export default function QuizzesBrowser({
         </div>
       )}
 
+      <div className="mb-5 inline-flex rounded-full border border-border bg-surface p-1 text-sm font-medium">
+        {(["subjects", "all"] as const).map((v) => (
+          <button
+            key={v}
+            onClick={() => setView(v)}
+            className={`rounded-full px-4 py-1.5 transition-colors ${
+              view === v ? "bg-primary text-white" : "text-muted hover:text-foreground"
+            }`}
+          >
+            {v === "subjects" ? "By subject" : "All quizzes"}
+          </button>
+        ))}
+      </div>
+
+      {view === "subjects" ? (
+        <SubjectTopicBrowser
+          quizzes={allQuizzes}
+          attempted={attempted}
+          isSubscribed={isSubscribed}
+          sampleUsed={sampleUsed}
+          grades={grades}
+          gradeFilter={gradeFilter}
+          onGradeChange={setGradeFilter}
+          activeSubject={activeSubject}
+          onSubjectChange={(s) => {
+            setActiveSubject(s);
+            setActiveTopic(null);
+          }}
+          activeTopic={activeTopic}
+          onTopicChange={setActiveTopic}
+          onStart={(q) => setActiveQuiz(q)}
+        />
+      ) : (
+      <>
       <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface p-2">
         <Search size={18} className="ml-2 shrink-0 text-muted" />
         <input
@@ -334,6 +386,8 @@ export default function QuizzesBrowser({
           })
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }

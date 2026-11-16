@@ -12,7 +12,12 @@ export const metadata = {
     "Multiple-choice practice quizzes for Grade 8-12, TVET, and university students in South Africa.",
 };
 
-export default async function QuizzesPage() {
+export default async function QuizzesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ subject?: string; topic?: string; quiz?: string }>;
+}) {
+  const sp = await searchParams;
   const supabase = await createClient();
   const { user, isAdmin } = await getCurrentUserWithRole();
 
@@ -88,6 +93,9 @@ export default async function QuizzesPage() {
               isSubscribed={isSubscribed}
               initialSavedQuizIds={savedQuizIds}
               initialAttemptedQuizzes={attemptedQuizzes}
+              initialSubject={sp.subject ?? null}
+              initialTopic={sp.topic ?? null}
+              initialQuizId={sp.quiz ?? null}
             />
           )}
         </section>

@@ -8,85 +8,67 @@ export type SubscriptionStatus = {
   isTrial: boolean;
   trialDaysRemaining: number | null;
   trialUsed: boolean;
+  // Cancelled, but still inside the period they already paid for.
+  cancelAtPeriodEnd: boolean;
+  // Active monthly subscription that can be cancelled in Settings.
+  canCancel: boolean;
 };
 
 /**
  * Returns the subscription status for the currently authenticated user.
  *
- * Admins always return isSubscribed: true — they should never be gated
- * out of any feature regardless of their subscription row in the DB.
+ * Admins always return isSubscribed: true.
  *
- * Both "active" (paid) and "trial" statuses grant full access, as long
- * as current_period_end is in the future (or null for lifetime access).
- * This matches the "access until end of billing period" cancellation
- * policy and the 14-day trial design — once the trial period passes,
- * the user is automatically treated as non-subscribed.
+ * "active", "trial" and "cancelled" all grant full access as long as
+ * current_period_end is still in the future. "cancelled" means the user
+ * stopped renewal but keeps what they've paid for until the period ends.
  */
 export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
   const { user, isAdmin } = await getCurrentUserWithRole();
 
-  if (!user) {
-    return {
-      isSubscribed: false,
-      plan: null,
-      currentPeriodEnd: null,
-      isTrial: false,
-      trialDaysRemaining: null,
-      trialUsed: false,
-    };
-  }
-
-  // Admins bypass the subscription check entirely.
-  if (isAdmin) {
-    return {
-      isSubscribed: true,
-      plan: "admin",
-      currentPeriodEnd: null,
-      isTrial: false,
-      trialDaysRemaining: null,
-      trialUsed: false,
-    };
-  }
-
-  const supabase = await createClient();
-
-  // Fetch subscription and trial_used flag in parallel.
-  const [subscriptionRes, profileRes] = await Promise.all([
-    supabase
-      .from("subscriptions")
-      .select("status, plan, current_period_end")
-      .eq("user_id", user.id)
-      .maybeSingle(),
-    supabase
-      .from("profiles")
-      .select("trial_used")
-      .eq("id", user.id)
-      .maybeSingle(),
-  ]);
-
-  const subscription = subscriptionRes.data;
-  const trialUsed = profileRes.data?.trial_used ?? false;
-
-  const notSubscribed = {
+  const none = (trialUsed = false): SubscriptionStatus => ({
     isSubscribed: false,
     plan: null,
     currentPeriodEnd: null,
     isTrial: false,
     trialDaysRemaining: null,
     trialUsed,
-  };
+    cancelAtPeriodEnd: false,
+    canCancel: false,
+  });
 
-  if (!subscription) return notSubscribed;
+  if (!user) return none();
 
-  const isValidStatus =
-    subscription.status === "active" || subscription.status === "trial";
-  if (!isValidStatus) return notSubscribed;
+  if (isAdmin) {
+    return { ...none(), isSubscribed: true, plan: "admin" };
+  }
 
-  // Check period end hasn't passed.
+  const supabase = await createClient();
+
+  const [subscriptionRes, profileRes] = await Promise.all([
+    supabase
+      .from("subscriptions")
+      .select("status, plan, current_period_end, payfast_token")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase.from("profiles").select("trial_used").eq("id", user.id).maybeSingle(),
+  ]);
+
+  const subscription = subscriptionRes.data;
+  const trialUsed = profileRes.data?.trial_used ?? false;
+
+  if (!subscription) return none(trialUsed);
+
+  const validStatus = ["active", "trial", "cancelled"].includes(subscription.status);
+  if (!validStatus) return none(trialUsed);
+
+  // A cancelled subscription is only useful while there is paid time left.
+  if (subscription.status === "cancelled" && !subscription.current_period_end) return none(trialUsed);
+
   let trialDaysRemaining: number | null = null;
   if (subscription.current_period_end) {
     const periodEnd = new Date(subscription.current_period_end);
-    if (periodEnd < new Date()) return notSubscribed;
+    if (periodEnd < new Date()) return none(trialUsed);
 
     if (subscription.status === "trial") {
       const msRemaining = periodEnd.getTime() - Date.now();
@@ -101,5 +83,8 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
     isTrial: subscription.status === "trial",
     trialDaysRemaining,
     trialUsed,
+    cancelAtPeriodEnd: subscription.status === "cancelled",
+    canCancel:
+      subscription.status === "active" && subscription.plan === "monthly" && !!subscription.payfast_token,
   };
 }

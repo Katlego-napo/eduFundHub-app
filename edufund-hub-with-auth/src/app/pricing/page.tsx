@@ -4,13 +4,20 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Check, Sparkles, Brain, Calendar, Loader2 } from "lucide-react";
+import { Check, Sparkles, Calendar, Building2, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 const FEATURES_FREE = [
   "Browse all bursary listings",
   "Save bursaries to your dashboard",
   "One free practice quiz",
+];
+
+const ORG_FEATURES = [
+  "Everything in the paid plans",
+  "Bulk subscriptions for your learners",
+  "One invoice for the whole school",
+  "Set up and support from our team",
 ];
 
 const FEATURES_PAID = [
@@ -92,7 +99,7 @@ function PricingContent() {
     }
   }
 
-  async function handleSubscribe(plan: "monthly" | "exam_season") {
+  async function handleSubscribe(plan: "monthly" | "yearly") {
     if (!data?.isLoggedIn) {
       router.push("/login?redirect=/pricing");
       return;
@@ -171,7 +178,7 @@ function PricingContent() {
         <div className="mb-8 rounded-2xl border border-secondary/30 bg-secondary/10 px-5 py-4 text-center text-sm text-foreground">
           ✅ You&apos;re on the{" "}
           <span className="font-semibold">
-            {plan === "exam_season" ? "Exam Season Package" : "Monthly Plan"}
+            {plan === "yearly" ? "Yearly Plan" : "Monthly Plan"}
           </span>
           . All features are unlocked.{" "}
           <Link href="/dashboard" className="font-medium text-primary hover:underline">
@@ -193,7 +200,7 @@ function PricingContent() {
 
       {trialSuccess && (
         <div className="mb-8 rounded-2xl border border-secondary/30 bg-secondary/10 px-5 py-4 text-center text-sm font-medium text-foreground">
-          🎉 Your 14-day free trial has started! Redirecting you now...
+          🎉 Your 1-day free trial has started! Redirecting you now...
         </div>
       )}
 
@@ -203,7 +210,7 @@ function PricingContent() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {/* Free plan */}
         <div className="flex flex-col rounded-2xl border border-border bg-surface p-6">
           <h2 className="font-display text-lg font-semibold text-foreground">Free</h2>
@@ -285,7 +292,7 @@ function PricingContent() {
                       {starting && (
                         <Loader2 size={14} className="animate-spin" />
                       )}
-                      Start 14-Day Free Trial
+                      Start 1-Day Free Trial
                     </button>
                     <p className="text-center text-xs text-muted">
                       No credit card required for trial.
@@ -305,22 +312,18 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Exam season plan */}
+        {/* Yearly plan (one payment, 11 months) */}
         <div className="flex flex-col rounded-2xl border border-border bg-surface p-6">
           <div className="flex items-center gap-2">
-            <h2 className="font-display text-lg font-semibold text-foreground">
-              Exam Season
-            </h2>
+            <h2 className="font-display text-lg font-semibold text-foreground">Yearly</h2>
             <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-medium text-[#7A5A0A]">
-              Sep – Nov
+              One payment
             </span>
           </div>
-          <p className="mt-1 text-sm text-muted">
-            Full access for the matric exam period.
-          </p>
+          <p className="mt-1 text-sm text-muted">Pay once and study all year. No auto-renewal.</p>
           <p className="mt-4 font-display text-3xl font-bold text-foreground">
-            R199
-            <span className="text-base font-normal text-muted">/3 months</span>
+            R759
+            <span className="text-base font-normal text-muted"> / 11 months</span>
           </p>
           <ul className="mt-6 flex-1 space-y-3">
             {FEATURES_PAID.map((f) => (
@@ -331,31 +334,53 @@ function PricingContent() {
             ))}
             <li className="flex items-start gap-2 text-sm font-medium text-[#7A5A0A]">
               <Calendar size={15} className="mt-0.5 shrink-0" />
-              Timed for matric exams
+              11 months of access, paid once
             </li>
           </ul>
           {loading ? (
             <div className="mt-6 flex items-center justify-center rounded-full bg-accent/20 py-2.5">
               <Loader2 size={16} className="animate-spin text-[#7A5A0A]" />
             </div>
-          ) : isSubscribed && plan === "exam_season" ? (
+          ) : isSubscribed && !isTrial && plan === "yearly" ? (
             <div className="mt-6 flex items-center justify-center gap-2 rounded-full bg-secondary/10 py-2.5 text-sm font-semibold text-secondary">
               ✅ Current plan
             </div>
           ) : (
             <button
-              onClick={() => handleSubscribe("exam_season")}
-              disabled={checkoutLoading === "exam_season"}
+              onClick={() => handleSubscribe("yearly")}
+              disabled={checkoutLoading === "yearly"}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-accent py-2.5 text-sm font-semibold text-[#3A2E0A] transition-colors hover:bg-accent/90 disabled:opacity-60"
             >
-              {checkoutLoading === "exam_season" ? (
+              {checkoutLoading === "yearly" ? (
                 <Loader2 size={15} className="animate-spin" />
               ) : (
-                <Brain size={15} />
+                <Calendar size={15} />
               )}
-              Subscribe — R199
+              Subscribe — R759
             </button>
           )}
+        </div>
+
+        {/* Organization plan (contact us) */}
+        <div className="flex flex-col rounded-2xl border border-border bg-surface p-6">
+          <h2 className="font-display text-lg font-semibold text-foreground">Organization</h2>
+          <p className="mt-1 text-sm text-muted">For schools that want to subscribe their learners in bulk.</p>
+          <p className="mt-4 font-display text-3xl font-bold text-foreground">Custom</p>
+          <ul className="mt-6 flex-1 space-y-3">
+            {ORG_FEATURES.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-sm text-muted">
+                <Check size={15} className="mt-0.5 shrink-0 text-primary" />
+                {f}
+              </li>
+            ))}
+          </ul>
+          <a
+            href="mailto:admin@edufundhub.co.za?subject=School%20bulk%20subscription"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-full border border-primary py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+          >
+            <Building2 size={15} />
+            Contact us
+          </a>
         </div>
       </div>
 
@@ -367,7 +392,7 @@ function PricingContent() {
         <div className="mt-4 space-y-4 text-sm text-muted">
           <div>
             <p className="font-medium text-foreground">
-              What does the 14-day free trial include?
+              What does the 1-day free trial include?
             </p>
             <p className="mt-1">
               Full access to everything — unlimited quizzes, AI Study Assistant,
@@ -386,8 +411,8 @@ function PricingContent() {
           <div>
             <p className="font-medium text-foreground">Can I cancel anytime?</p>
             <p className="mt-1">
-              Yes — cancel anytime and you keep access until the end of your
-              billing period. No hidden fees.
+              Yes. Cancel the monthly plan in Settings and you keep access until the end of
+              the period you paid for. The yearly plan is a single payment and doesn&apos;t renew.
             </p>
           </div>
           <div>
@@ -431,7 +456,7 @@ export default function PricingPage() {
             </p>
           </div>
         </section>
-        <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+        <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
           <Suspense
             fallback={
               <div className="flex items-center justify-center py-20">

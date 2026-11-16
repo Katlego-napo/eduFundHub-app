@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
 import { getSubscriptionStatus } from "@/lib/auth/getSubscriptionStatus";
-import Header from "@/components/Header";
+import { getDashboardData, topicHref, quizHref } from "@/lib/dashboardStats";
+import DashboardStatCard from "@/components/DashboardStatCard";
 import SubjectStrengthsCard from "@/components/SubjectStrengthsCard";
 import Link from "next/link";
 import {
@@ -11,7 +12,6 @@ import {
   ShieldCheck,
   Sparkles,
   ArrowRight,
-  Brain,
   FileQuestion,
   Clock,
 } from "lucide-react";
@@ -33,6 +33,7 @@ export default async function DashboardPage() {
   }
 
   const supabase = await createClient();
+  const dash = await getDashboardData(supabase, user.id);
 
   const { isTrial, trialDaysRemaining } = await getSubscriptionStatus();
 
@@ -52,12 +53,6 @@ export default async function DashboardPage() {
     .eq("user_id", user.id);
 
   const totalQuizzes = quizAttempts?.length ?? 0;
-  const averageScorePercent =
-    totalQuizzes > 0
-      ? Math.round(
-          (quizAttempts!.reduce((acc, a) => acc + a.score / a.total, 0) / totalQuizzes) * 100
-        )
-      : null;
 
   // Subject strength: average score % per subject, from attempts on
   // admin-authored quizzes only (subject is null for AI-generated
@@ -270,10 +265,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-
-      <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <div>
         <h1 className="font-display text-2xl font-semibold text-foreground sm:text-3xl">
           Welcome back, {name} 👋
         </h1>
@@ -301,6 +293,136 @@ export default async function DashboardPage() {
             </Link>
           </div>
         )}
+
+        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <DashboardStatCard label="Overall progress" value={`${dash.overallProgress}%`} />
+          <DashboardStatCard
+            label="Quizzes completed"
+            value={String(dash.completed.length)}
+            href="/dashboard/completed"
+          />
+          <DashboardStatCard
+            label="Average score"
+            value={dash.averageScore === null ? "–" : `${dash.averageScore}%`}
+          />
+          <DashboardStatCard
+            label="Weak topics"
+            value={String(dash.weakTopics.length)}
+            href="/dashboard/weak-topics"
+          />
+        </div>
+
+        <section className="mt-5 rounded-2xl border border-border bg-surface p-6">
+          <h2 className="font-display text-base font-semibold text-foreground">Subject progress</h2>
+          {dash.subjectProgress.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">No quizzes available yet.</p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {dash.subjectProgress.map((s) => (
+                <div key={s.subject} className="flex items-center gap-4">
+                  <Link
+                    href={`/quizzes?subject=${encodeURIComponent(s.subject)}`}
+                    className="w-32 shrink-0 truncate text-sm text-foreground hover:text-primary sm:w-44"
+                  >
+                    {s.subject}
+                  </Link>
+                  <div
+                    className="h-2.5 flex-1 overflow-hidden rounded-full bg-foreground/10"
+                    role="progressbar"
+                    aria-valuenow={s.percent}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${s.subject} progress`}
+                  >
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${s.percent}%` }} />
+                  </div>
+                  <span className="w-10 text-right text-sm font-medium text-foreground">
+                    {s.percent}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <section className="rounded-2xl border border-border bg-surface p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-base font-semibold text-foreground">
+                Recent quiz results
+              </h2>
+              {dash.completed.length > 5 && (
+                <Link href="/dashboard/completed" className="text-xs font-medium text-primary hover:underline">
+                  View all
+                </Link>
+              )}
+            </div>
+            {dash.completed.length === 0 ? (
+              <p className="mt-3 text-sm text-muted">
+                No quizzes taken yet.{" "}
+                <Link href="/quizzes" className="font-medium text-primary hover:underline">
+                  Take your first quiz
+                </Link>
+              </p>
+            ) : (
+              <ul className="mt-2 divide-y divide-border">
+                {dash.completed.slice(0, 5).map((c) => (
+                  <li key={c.quizId} className="flex items-center justify-between gap-3 py-3">
+                    <Link
+                      href={quizHref(c.quizId)}
+                      className="min-w-0 truncate text-sm text-foreground hover:text-primary"
+                    >
+                      {c.title}
+                    </Link>
+                    <span className="shrink-0 text-sm font-medium text-foreground">{c.percent}%</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-border bg-surface p-6">
+            <h2 className="font-display text-base font-semibold text-foreground">
+              Recommended to practise
+            </h2>
+            {dash.recommended.length === 0 ? (
+              <p className="mt-3 text-sm text-muted">
+                Nothing to recommend yet. Take a quiz and we&apos;ll suggest what to practise next.
+              </p>
+            ) : (
+              <ul className="mt-2 divide-y divide-border">
+                {dash.recommended.map((t) => (
+                  <li
+                    key={`${t.subject}-${t.topic}`}
+                    className="flex items-center justify-between gap-3 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm text-foreground">
+                        {t.topic}
+                        {t.weak && (
+                          <span className="ml-2 rounded-full bg-accent/20 px-2 py-0.5 text-[11px] font-semibold text-[#7A5A0A]">
+                            Weak
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-muted">{t.subject}</p>
+                    </div>
+                    <Link
+                      href={topicHref(t.subject, t.topic)}
+                      className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                        t.weak
+                          ? "bg-primary text-white hover:bg-primary-light"
+                          : "border border-primary text-primary hover:bg-primary/5"
+                      }`}
+                    >
+                      Start quiz
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
 
         {rank && rankTier && (
           <div
@@ -394,25 +516,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div className="rounded-2xl border border-border bg-surface p-6">
-            <h3 className="flex items-center gap-1.5 font-display text-sm font-semibold text-foreground">
-              <Brain size={14} className="text-secondary" />
-              Quiz Progress
-            </h3>
-            <p className="mt-2 text-2xl font-semibold text-secondary">
-              {totalQuizzes}
-              <span className="ml-1 text-sm font-normal text-muted">
-                {totalQuizzes === 1 ? "quiz" : "quizzes"} taken
-              </span>
-            </p>
-            <p className="mt-1 text-xs text-muted">
-              {totalQuizzes > 0
-                ? `Average score: ${averageScorePercent}%`
-                : "Take a quiz to see your progress here"}
-            </p>
-          </div>
-
+        <div className="mt-5">
           <SubjectStrengthsCard
             subjectStrengths={subjectStrengths}
             topicStrengthsMap={Object.fromEntries(topicStrengths)}
@@ -481,7 +585,6 @@ export default async function DashboardPage() {
             </div>
           </div>
         )}
-      </main>
     </div>
   );
 }

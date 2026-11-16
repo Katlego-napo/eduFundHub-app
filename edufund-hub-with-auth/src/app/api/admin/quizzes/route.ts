@@ -4,6 +4,11 @@ import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
 import { revalidatePath } from "next/cache";
 import type { QuizQuestion } from "@/lib/types/quiz";
 
+// Collapse stray spaces: "  Algebra   basics " -> "Algebra basics"
+function tidy(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
 function isValidQuestion(q: unknown): q is QuizQuestion {
   if (typeof q !== "object" || q === null) return false;
   const question = q as Record<string, unknown>;
@@ -61,11 +66,33 @@ export async function POST(request: Request) {
   // isAdmin check above, so RLS doesn't need to gate this write too.
   const serviceClient = createServiceClient();
 
+  // Reuse the spelling already in the database when the new subject/topic
+  // matches ignoring capitalisation, so "algebra" never becomes a second
+  // "Algebra" topic. The first spelling saved wins.
+  const { data: known } = await serviceClient.from("quizzes").select("subject, topic");
+  const rows = known ?? [];
+
+  const cleanSubject = tidy(subject);
+  const subjectMatch = rows.find(
+    (r) => r.subject.toLowerCase() === cleanSubject.toLowerCase()
+  );
+  const finalSubject = subjectMatch?.subject ?? cleanSubject;
+
+  let finalTopic: string | null =
+    typeof topic === "string" && tidy(topic) ? tidy(topic) : null;
+  if (finalTopic) {
+    const wanted = finalTopic.toLowerCase();
+    const topicMatch = rows.find(
+      (r) => r.subject === finalSubject && r.topic && r.topic.toLowerCase() === wanted
+    );
+    if (topicMatch?.topic) finalTopic = topicMatch.topic;
+  }
+
   const { error: insertError } = await serviceClient.from("quizzes").insert({
     title: title.trim(),
-    subject: subject.trim(),
+    subject: finalSubject,
     grade: grade.trim(),
-    topic: typeof topic === "string" && topic.trim() ? topic.trim() : null,
+    topic: finalTopic,
     questions,
     created_by: user.id,
   });

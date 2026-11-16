@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
 
-const TRIAL_DAYS = 14;
+const TRIAL_DAYS = 1;
 
 export async function POST() {
   const { user } = await getCurrentUserWithRole();
@@ -36,7 +36,7 @@ export async function POST() {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (existing?.status === "active" || existing?.status === "trial") {
+  if (existing?.status === "active" || existing?.status === "trial" || existing?.status === "cancelled") {
     const periodEnd = existing.current_period_end
       ? new Date(existing.current_period_end)
       : null;
