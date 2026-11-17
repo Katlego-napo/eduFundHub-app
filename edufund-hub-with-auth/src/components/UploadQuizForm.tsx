@@ -55,6 +55,8 @@ export default function UploadQuizForm() {
   const [subject, setSubject] = useState("");
   const [grade, setGrade] = useState<string>(QUIZ_GRADES[4]); // Grade 12 default
   const [topic, setTopic] = useState("");
+  // Bulk only: put every quiz in the Topic above, ignoring any "topic" inside the JSON.
+  const [forceTopic, setForceTopic] = useState(false);
 
   // Subjects/topics already in the database, offered as suggestions so
   // spellings stay consistent ("Algebra" vs "algebra").
@@ -178,6 +180,10 @@ export default function UploadQuizForm() {
       setBulkError("Set a Subject above before importing — it's applied to every quiz in the batch.");
       return;
     }
+    if (forceTopic && !topic.trim()) {
+      setBulkError("You ticked \"Put every quiz in this topic\", so type or pick a Topic above first.");
+      return;
+    }
     if (!bulkJson.trim()) {
       setBulkError("Paste a JSON array of quizzes first.");
       return;
@@ -214,7 +220,7 @@ export default function UploadQuizForm() {
             title: item.quiz.title,
             subject,
             grade,
-            topic: item.quiz.topic ?? (topic.trim() || null),
+            topic: forceTopic ? topic.trim() || null : item.quiz.topic ?? (topic.trim() || null),
             questions: item.quiz.questions,
           }),
         });
@@ -320,9 +326,22 @@ export default function UploadQuizForm() {
             Pick an existing topic to keep spelling consistent, or type a new one.
           </p>
           {mode === "bulk" && (
-            <p className="mt-1 text-xs text-muted">
-              Used for any quiz that has no <code className="rounded bg-foreground/5 px-1">"topic"</code> of its own. To put different quizzes in different topics, add <code className="rounded bg-foreground/5 px-1">"topic": "Algebra"</code> to each quiz in the JSON.
-            </p>
+            <>
+              <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  checked={forceTopic}
+                  onChange={(e) => setForceTopic(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0"
+                />
+                <span>Put every quiz in this topic, ignoring the topics in the JSON</span>
+              </label>
+              <p className="mt-1 text-xs text-muted">
+                {forceTopic
+                  ? "All quizzes in the pasted batch will go under the Topic above."
+                  : <>Otherwise the Topic above is only used for quizzes with no <code className="rounded bg-foreground/5 px-1">"topic"</code> of their own.</>}
+              </p>
+            </>
           )}
         </div>
         <div>
