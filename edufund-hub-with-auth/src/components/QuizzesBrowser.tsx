@@ -126,6 +126,40 @@ export default function QuizzesBrowser({
     }
   }
 
+  const [deletingTopic, setDeletingTopic] = useState<string | null>(null);
+
+  // Admin: delete every quiz shown in a topic, in one go.
+  async function handleDeleteTopic(topicName: string, topicQuizzes: Quiz[]) {
+    const n = topicQuizzes.length;
+    const confirmed = window.confirm(
+      `Delete the topic "${topicName}" and all ${n} quiz${n !== 1 ? "zes" : ""} in it? This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingTopic(topicName);
+    setDeleteError(null);
+    try {
+      const res = await fetch("/api/admin/quizzes/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: topicQuizzes.map((q) => q.id) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDeleteError(data.error ?? "Couldn't delete this topic.");
+        return;
+      }
+      const gone = new Set(topicQuizzes.map((q) => q.id));
+      setAllQuizzes((prev) => prev.filter((q) => !gone.has(q.id)));
+      if (activeTopic === topicName) setActiveTopic(null);
+      router.refresh();
+    } catch {
+      setDeleteError("Something went wrong. Please try again.");
+    } finally {
+      setDeletingTopic(null);
+    }
+  }
+
   async function toggleSave(quiz: Quiz) {
     if (!isLoggedIn) {
       router.push("/login");
@@ -220,6 +254,10 @@ export default function QuizzesBrowser({
         </div>
       )}
 
+      {view === "subjects" && deleteError && (
+        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{deleteError}</div>
+      )}
+
       <div className="mb-5 inline-flex rounded-full border border-border bg-surface p-1 text-sm font-medium">
         {(["subjects", "all"] as const).map((v) => (
           <button
@@ -251,6 +289,9 @@ export default function QuizzesBrowser({
           activeTopic={activeTopic}
           onTopicChange={setActiveTopic}
           onStart={(q) => setActiveQuiz(q)}
+          isAdmin={isAdmin}
+          onDeleteTopic={handleDeleteTopic}
+          deletingTopic={deletingTopic}
         />
       ) : (
       <>
