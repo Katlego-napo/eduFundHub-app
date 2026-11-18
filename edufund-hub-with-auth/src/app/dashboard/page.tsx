@@ -278,7 +278,7 @@ export default async function DashboardPage() {
             <div className="flex items-center gap-2 text-sm text-foreground">
               <Clock size={16} className="text-[#7A5A0A]" />
               <span>
-                Your <strong>14-day free trial</strong> expires in{" "}
+                Your <strong>1-day free trial</strong> expires in{" "}
                 <strong>
                   {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""}
                 </strong>
