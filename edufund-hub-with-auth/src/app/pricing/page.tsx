@@ -7,11 +7,11 @@ import Footer from "@/components/Footer";
 import { Check, Sparkles, Calendar, Building2, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-const FEATURES_FREE = [
-  "Browse all bursary listings",
-  "Save bursaries to your dashboard",
-  "One free practice quiz",
-];
+//const FEATURES_FREE = [
+//  "Browse all bursary listings",
+//  "Save bursaries to your dashboard",
+//  "One free practice quiz",
+//  ];
 
 const ORG_FEATURES = [
   "Everything in the paid plans",
@@ -21,11 +21,11 @@ const ORG_FEATURES = [
 ];
 
 const FEATURES_PAID = [
-  "Everything in Free",
+ 
   "Unlimited practice quizzes",
-  "Full AI Study Assistant access",
-  "Upload documents and ask questions",
-  "Generate AI practice quizzes from your notes",
+ // "Full AI Study Assistant access",
+ // "Upload documents and ask questions",
+ // "Generate AI practice quizzes from your notes",
   "Per-subject and per-topic progress tracking",
   "Full ranking and subject strength stats",
 ];
@@ -176,7 +176,7 @@ function PricingContent() {
       {/* Active subscription banner */}
       {isSubscribed && !isTrial && (
         <div className="mb-8 rounded-2xl border border-secondary/30 bg-secondary/10 px-5 py-4 text-center text-sm text-foreground">
-          ✅ You&apos;re on the{" "}
+           You&apos;re on the{" "}
           <span className="font-semibold">
             {plan === "yearly" ? "Yearly Plan" : "Monthly Plan"}
           </span>
@@ -190,7 +190,7 @@ function PricingContent() {
       {/* Trial active banner */}
       {isTrial && (
         <div className="mb-8 rounded-2xl border border-accent/30 bg-accent/10 px-5 py-4 text-center text-sm text-foreground">
-          🎉 Your free trial is active —{" "}
+           Your free trial is active —{" "}
           <span className="font-semibold">
             {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""} remaining.
           </span>{" "}
@@ -200,7 +200,7 @@ function PricingContent() {
 
       {trialSuccess && (
         <div className="mb-8 rounded-2xl border border-secondary/30 bg-secondary/10 px-5 py-4 text-center text-sm font-medium text-foreground">
-          🎉 Your 1-day free trial has started! Redirecting you now...
+           Your 1-day free trial has started! Redirecting you now...
         </div>
       )}
 
@@ -266,7 +266,7 @@ function PricingContent() {
               </div>
             ) : isSubscribed && plan === "monthly" ? (
               <div className="flex items-center justify-center gap-2 rounded-full bg-secondary/10 py-2.5 text-sm font-semibold text-secondary">
-                ✅ Current plan
+                 Current plan
               </div>
             ) : (
               <>
@@ -343,7 +343,7 @@ function PricingContent() {
             </div>
           ) : isSubscribed && !isTrial && plan === "yearly" ? (
             <div className="mt-6 flex items-center justify-center gap-2 rounded-full bg-secondary/10 py-2.5 text-sm font-semibold text-secondary">
-              ✅ Current plan
+               Current plan
             </div>
           ) : (
             <button
