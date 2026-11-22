@@ -7,11 +7,11 @@ import Footer from "@/components/Footer";
 import { Check, Sparkles, Calendar, Building2, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-//const FEATURES_FREE = [
-//  "Browse all bursary listings",
-//  "Save bursaries to your dashboard",
-//  "One free practice quiz",
-//  ];
+const FEATURES_FREE = [
+  "Browse all bursary listings",
+ "Save bursaries to your dashboard",
+  "One free practice quiz",
+  ];
 
 const ORG_FEATURES = [
   "Everything in the paid plans",
