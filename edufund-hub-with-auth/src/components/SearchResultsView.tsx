@@ -78,7 +78,7 @@ export default function SearchResultsView({
                 {quizzes.map((quiz) => (
                   <Link
                     key={quiz.id}
-                    href="/quizzes"
+                    href={`/quizzes?quiz=${quiz.id}`}
                     className="flex flex-col rounded-2xl border border-border bg-surface p-5 transition-shadow hover:shadow-lg hover:shadow-black/5"
                   >
                     <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
