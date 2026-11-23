@@ -26,16 +26,6 @@ function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function InstagramIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="3.8" />
-      <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
 export default function Footer() {
   return (
     <footer className="border-t border-border bg-surface">
@@ -52,16 +42,31 @@ export default function Footer() {
               and career resources.
             </p>
             <div className="mt-4 flex gap-3">
-              <a href="#" aria-label="Facebook" className="text-muted hover:text-primary">
+              <a
+                href="https://www.facebook.com/share/19zaCkG34X/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="text-muted hover:text-primary"
+              >
                 <FacebookIcon style={{ height: 18, width: 18 }} />
               </a>
-              <a href="#" aria-label="TikTok" className="text-muted hover:text-primary">
+              <a
+                href="https://www.tiktok.com/@edufundhub"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok"
+                className="text-muted hover:text-primary"
+              >
                 <TikTokIcon style={{ height: 18, width: 18 }} />
               </a>
-              <a href="#" aria-label="Instagram" className="text-muted hover:text-primary">
-                <InstagramIcon style={{ height: 18, width: 18 }} />
-              </a>
-              <a href="#" aria-label="WhatsApp Channel" className="text-muted hover:text-primary">
+              <a
+                href="https://whatsapp.com/channel/0029Vb8jT050bIdisDDvxL2N"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="WhatsApp Channel"
+                className="text-muted hover:text-primary"
+              >
                 <WhatsAppIcon style={{ height: 18, width: 18 }} />
               </a>
             </div>
