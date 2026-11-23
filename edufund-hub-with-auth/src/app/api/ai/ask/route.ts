@@ -1,14 +1,29 @@
 import { NextResponse } from "next/server";
+import { STUDY_ASSISTANT_ENABLED } from "@/lib/features";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { getSubscriptionStatus } from "@/lib/auth/getSubscriptionStatus";
 import { askQuestionAboutDocument } from "@/lib/ai/gemini";
 import { checkAndLogAiUsage, DAILY_LIMIT } from "@/lib/ai/rateLimit";
 
 export async function POST(request: Request) {
+  if (!STUDY_ASSISTANT_ENABLED) {
+    return NextResponse.json({ error: "Not available." }, { status: 404 });
+  }
   const supabase = await createClient();
   const { data: userData, error: authError } = await supabase.auth.getUser();
 
   if (authError || !userData?.user) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  }
+
+  // The assistant is a subscriber feature (admins always count as subscribed).
+  const { isSubscribed } = await getSubscriptionStatus();
+  if (!isSubscribed) {
+    return NextResponse.json(
+      { error: "Please subscribe to use the AI Study Assistant." },
+      { status: 403 }
+    );
   }
 
   const { documentId, question } = await request.json();
@@ -30,14 +45,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: document, error: docError } = await supabase
+  // Study guides are shared (uploaded by the admin), read with the service
+  // client because no user-level RLS policy exposes the guide text.
+  const { data: document, error: docError } = await createServiceClient()
     .from("study_documents")
-    .select("extracted_text, user_id")
+    .select("extracted_text")
     .eq("id", documentId)
     .single();
 
-  if (docError || !document || document.user_id !== userData.user.id) {
-    return NextResponse.json({ error: "Document not found." }, { status: 404 });
+  if (docError || !document) {
+    return NextResponse.json({ error: "Study guide not found." }, { status: 404 });
   }
 
   try {
