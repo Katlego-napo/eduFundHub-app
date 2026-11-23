@@ -3,14 +3,15 @@
 import { useState } from "react";
 import DocumentUploader from "@/components/study-assistant/DocumentUploader";
 import DocumentChat from "@/components/study-assistant/DocumentChat";
-import QuizGenerator from "@/components/study-assistant/QuizGenerator";
 import type { StudyDocument } from "@/lib/types/studyDocument";
 import { FileText, X, Trash2 } from "lucide-react";
 
 export default function StudyAssistantClient({
   initialDocuments,
+  isAdmin = false,
 }: {
   initialDocuments: StudyDocument[];
+  isAdmin?: boolean;
 }) {
   const [documents, setDocuments] = useState(initialDocuments);
   const [activeDoc, setActiveDoc] = useState<StudyDocument | null>(
@@ -26,7 +27,7 @@ export default function StudyAssistantClient({
 
   async function handleDelete(doc: StudyDocument) {
     const confirmed = window.confirm(
-      `Delete "${doc.file_name}"? This can't be undone.`
+      `Delete the study guide "${doc.file_name}" for all students? This can't be undone.`
     );
     if (!confirmed) return;
 
@@ -74,6 +75,7 @@ export default function StudyAssistantClient({
                 <FileText size={13} />
                 {doc.file_name}
               </button>
+              {isAdmin && (
               <button
                 onClick={() => handleDelete(doc)}
                 disabled={deletingId === doc.id}
@@ -86,6 +88,7 @@ export default function StudyAssistantClient({
               >
                 <X size={13} />
               </button>
+              )}
             </div>
           ))}
         </div>
@@ -98,12 +101,25 @@ export default function StudyAssistantClient({
       )}
 
       {!activeDoc ? (
-        <DocumentUploader onUploaded={handleUploaded} />
+        isAdmin ? (
+          <DocumentUploader onUploaded={handleUploaded} />
+        ) : (
+          <div className="rounded-2xl border border-border bg-surface p-8 text-center">
+            <p className="font-display text-lg font-semibold text-foreground">
+              No study guides yet
+            </p>
+            <p className="mt-1 text-sm text-muted">
+              Study guides are being added. Please check back soon.
+            </p>
+          </div>
+        )
       ) : (
         <div>
-          <div className="mb-6">
-            <DocumentUploader onUploaded={handleUploaded} />
-          </div>
+          {isAdmin && (
+            <div className="mb-6">
+              <DocumentUploader onUploaded={handleUploaded} />
+            </div>
+          )}
 
           {documents.length === 1 && (
             <div className="mb-6 flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3">
@@ -111,21 +127,20 @@ export default function StudyAssistantClient({
                 <FileText size={15} className="text-primary" />
                 {activeDoc.file_name}
               </div>
-              <button
-                onClick={() => handleDelete(activeDoc)}
-                disabled={deletingId === activeDoc.id}
-                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
-              >
-                <Trash2 size={14} />
-                {deletingId === activeDoc.id ? "Deleting..." : "Delete"}
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => handleDelete(activeDoc)}
+                  disabled={deletingId === activeDoc.id}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+                >
+                  <Trash2 size={14} />
+                  {deletingId === activeDoc.id ? "Deleting..." : "Delete"}
+                </button>
+              )}
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <DocumentChat documentId={activeDoc.id} />
-            <QuizGenerator documentId={activeDoc.id} />
-          </div>
+          <DocumentChat documentId={activeDoc.id} />
         </div>
       )}
     </div>
