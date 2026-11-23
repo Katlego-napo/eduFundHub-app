@@ -280,7 +280,7 @@ function PricingContent() {
                   ) : (
                     <Sparkles size={15} />
                   )}
-                  Subscribe — R69/month
+                  Subscribe 
                 </button>
                 {!trialUsed && !isTrial && (
                   <>
@@ -356,7 +356,7 @@ function PricingContent() {
               ) : (
                 <Calendar size={15} />
               )}
-              Subscribe — R759
+              Subscribe 
             </button>
           )}
         </div>
