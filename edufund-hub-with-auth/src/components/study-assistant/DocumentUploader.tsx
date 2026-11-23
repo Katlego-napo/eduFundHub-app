@@ -42,11 +42,11 @@ export default function DocumentUploader({
   return (
     <div className="rounded-2xl border border-border bg-surface p-6">
       <h2 className="font-display text-lg font-semibold text-foreground">
-        Upload a document to get started
+        Upload a study guide
       </h2>
       <p className="mt-1 text-sm text-muted">
-        Upload your notes, a past paper, or a textbook chapter (PDF, max 10MB) and
-        ask questions or generate a practice quiz from it.
+        Admin only. Students will be able to ask questions and get answers based
+        on this guide (PDF, max 10MB).
       </p>
 
       <label className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-background px-4 py-8 text-sm text-muted transition-colors hover:border-secondary">
@@ -70,7 +70,7 @@ export default function DocumentUploader({
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-light disabled:opacity-60"
       >
         <FileText size={16} />
-        {loading ? "Processing document..." : "Upload & Analyze"}
+        {loading ? "Processing study guide..." : "Upload study guide"}
       </button>
     </div>
   );
