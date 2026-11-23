@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { STUDY_ASSISTANT_ENABLED } from "@/lib/features";
-import { GraduationCap, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -43,8 +43,6 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Link href="/" className="flex items-center gap-2">
-             
-              </span>
               <span className="font-display text-base font-semibold text-foreground">
                 EduFund Hub
               </span>
