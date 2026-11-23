@@ -9,7 +9,7 @@ import type { Quiz } from "@/lib/types/quiz";
 export const metadata = {
   title: "Practice Quizzes | EduFund Hub",
   description:
-    "Multiple-choice practice quizzes for Grade 8-12, TVET, and university students in South Africa.",
+    "Multiple-choice practice quizzes for high school students in South Africa.",
 };
 
 export default async function QuizzesPage({
@@ -75,7 +75,7 @@ export default async function QuizzesPage({
               Practice Quizzes
             </h1>
             <p className="mt-2 text-white/75">
-              Test your knowledge with multiple-choice quizzes — completely free to try.
+              Test your knowledge with multiple-choice quizzes.
             </p>
           </div>
         </section>
