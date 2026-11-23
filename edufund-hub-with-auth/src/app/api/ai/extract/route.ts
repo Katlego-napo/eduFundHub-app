@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { STUDY_ASSISTANT_ENABLED } from "@/lib/features";
+import { createServiceClient } from "@/lib/supabase/service";
+import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
 import { extractTextFromPdf } from "@/lib/ai/pdfExtract";
 import { extractTextFromPdfViaOcr } from "@/lib/ai/gemini";
 import { checkAndLogAiUsage, DAILY_LIMIT } from "@/lib/ai/rateLimit";
@@ -7,12 +9,21 @@ import { checkAndLogAiUsage, DAILY_LIMIT } from "@/lib/ai/rateLimit";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: userData, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !userData?.user) {
+  if (!STUDY_ASSISTANT_ENABLED) {
+    return NextResponse.json({ error: "Not available." }, { status: 404 });
+  }
+  // Study guides are managed by the admin only.
+  const { user, isAdmin } = await getCurrentUserWithRole();
+  if (!user) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
+  if (!isAdmin) {
+    return NextResponse.json(
+      { error: "Only the admin can upload study guides." },
+      { status: 403 }
+    );
+  }
+  const supabase = createServiceClient();
 
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
@@ -52,7 +63,7 @@ export async function POST(request: Request) {
     // The PDF likely has no real text layer (scanned/photographed pages).
     // Fall back to asking Gemini to read it directly. This costs an actual
     // AI request, so it's rate-limited like the other AI features.
-    const { allowed, usedToday } = await checkAndLogAiUsage(userData.user.id);
+    const { allowed, usedToday } = await checkAndLogAiUsage(user.id);
     if (!allowed) {
       return NextResponse.json(
         {
@@ -83,7 +94,7 @@ export async function POST(request: Request) {
 
   // Upload original file to Storage, scoped to this user's folder
   const ext = file.name.split(".").pop() ?? "pdf";
-  const path = `${userData.user.id}/${crypto.randomUUID()}.${ext}`;
+  const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
     .from("study-documents")
@@ -98,12 +109,12 @@ export async function POST(request: Request) {
   const { data: docRow, error: insertError } = await supabase
     .from("study_documents")
     .insert({
-      user_id: userData.user.id,
+      user_id: user.id,
       file_name: file.name,
       file_url: urlData.publicUrl,
       extracted_text: extractedText,
     })
-    .select()
+    .select("id, file_name, created_at")
     .single();
 
   if (insertError || !docRow) {
