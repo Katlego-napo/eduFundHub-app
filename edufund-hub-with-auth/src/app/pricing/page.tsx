@@ -395,7 +395,7 @@ function PricingContent() {
               What does the 5-day free trial include?
             </p>
             <p className="mt-1">
-              Full access to everything — unlimited quizzes,
+              Unlimited quizzes,
               progress tracking, and ranking. No credit card required.
             </p>
           </div>
@@ -420,8 +420,8 @@ function PricingContent() {
               What payment methods are accepted?
             </p>
             <p className="mt-1">
-              All major South African payment methods through PayFast —
-              credit/debit cards, EFT, and more.
+              All major South African payment methods through PayFast
+              (credit/debit cards, EFT, and more).
             </p>
           </div>
           <div>
@@ -449,10 +449,10 @@ export default function PricingPage() {
         <section className="border-b border-border bg-primary py-12">
           <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
             <h1 className="font-display text-3xl font-semibold text-white sm:text-4xl">
-              Simple, affordable pricing
+              Pricing
             </h1>
             <p className="mt-2 text-white/75">
-              Built for South African Grade 11 and 12 students. Cancel anytime.
+              Built for South African high school students. Cancel anytime.
             </p>
           </div>
         </section>
