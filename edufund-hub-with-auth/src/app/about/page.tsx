@@ -1,11 +1,12 @@
 import Header from "@/components/Header";
+import { STUDY_ASSISTANT_ENABLED } from "@/lib/features";
 import Footer from "@/components/Footer";
 import { BookOpen, HeartHandshake, Sparkles, Brain } from "lucide-react";
 
 export const metadata = {
   title: "About Us | EduFund Hub",
   description:
-    "EduFund Hub helps South African students access past papers, bursaries, and an AI study assistant — free, always.",
+    "EduFund Hub helps South African students access past papers, bursaries, and practice quizzes — free, always.",
 };
 
 export default function AboutPage() {
@@ -36,8 +37,8 @@ export default function AboutPage() {
               Too many students struggle to find reliable study tools,
               know where to look for bursaries, or get extra help when
               studying for a difficult subject. We built EduFund Hub to close
-              that gap by bringing study materials, bursary listings,Quizzes, and an
-              AI-powered study assistant together in one place, at affordable subscription.
+              that gap by bringing study materials, bursary listings and practice quizzes
+              together in one place, at an affordable subscription.
             </p>
           </div>
 
@@ -82,18 +83,20 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border bg-surface p-6">
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Sparkles size={20} />
-              </span>
-              <h3 className="mt-4 font-display text-base font-semibold text-foreground">
-                AI Study Assistant
-              </h3>
-              <p className="mt-2 text-sm text-muted">
-                Ask questions, and generate
-                practice quizzes tailored to what you're studying.
-              </p>
-            </div>
+            {STUDY_ASSISTANT_ENABLED && (
+              <div className="rounded-2xl border border-border bg-surface p-6">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Sparkles size={20} />
+                </span>
+                <h3 className="mt-4 font-display text-base font-semibold text-foreground">
+                  AI Study Assistant
+                </h3>
+                <p className="mt-2 text-sm text-muted">
+                  Ask questions, and generate
+                  practice quizzes tailored to what you're studying.
+                </p>
+              </div>
+            )}
           </div>
 
 
