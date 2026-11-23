@@ -54,14 +54,14 @@ export default function DocumentChat({ documentId }: { documentId: string }) {
       <div className="border-b border-border px-5 py-3">
         <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-foreground">
           <Sparkles size={15} className="text-secondary" />
-          Ask about this document
+          Ask about this study guide
         </h3>
       </div>
 
       <div className="flex-1 space-y-3 px-5 py-4" style={{ minHeight: "240px", maxHeight: "420px", overflowY: "auto" }}>
         {messages.length === 0 ? (
           <p className="text-sm text-muted">
-            Ask anything about the document — e.g. &ldquo;Summarize section 2&rdquo; or
+            Ask anything about the study guide — e.g. &ldquo;Summarize section 2&rdquo; or
             &ldquo;Explain question 4&rdquo;.
           </p>
         ) : (
@@ -94,7 +94,7 @@ export default function DocumentChat({ documentId }: { documentId: string }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask a question about this document..."
+          placeholder="Ask a question about this study guide..."
           className="flex-1 rounded-full bg-background px-4 py-2 text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-secondary"
         />
         <button
