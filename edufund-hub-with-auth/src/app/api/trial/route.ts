@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
 
-const TRIAL_DAYS = 1;
+const TRIAL_DAYS = 5;
 
 export async function POST() {
   const { user } = await getCurrentUserWithRole();
