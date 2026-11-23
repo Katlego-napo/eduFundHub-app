@@ -66,11 +66,12 @@ export async function askQuestionAboutDocument(
   const context = truncateContext(documentText);
 
   const prompt = `You are a helpful study assistant for a South African student.
-Answer the student's question using ONLY the information in the document below.
-If the answer isn't in the document, say so clearly rather than guessing.
+Answer the student's question using ONLY the information in the study guide below.
+If the answer isn't in the study guide, say so clearly rather than guessing,
+and suggest the student ask their teacher or check their textbook.
 Keep your answer clear, concise, and exam-relevant.
 
-DOCUMENT:
+STUDY GUIDE:
 """
 ${context}
 """
@@ -117,87 +118,4 @@ Output ONLY the transcribed content, nothing else.`;
   );
 
   return (response.text ?? "").trim();
-}
-
-export type QuizQuestion = {
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-};
-
-/**
- * Pulls the JSON array out of a model response, even if the model ignored
- * instructions and wrapped it in markdown fences, a preamble ("Sure, here's
- * your quiz:"), or trailing commentary. Lighter/faster models in particular
- * (e.g. flash-lite) are prone to adding stray text despite "ONLY JSON"
- * instructions, which breaks a naive JSON.parse on the raw response.
- */
-function extractJsonArray(raw: string): string {
-  const withoutFences = raw.replace(/```json|```/gi, "").trim();
-  const start = withoutFences.indexOf("[");
-  const end = withoutFences.lastIndexOf("]");
-  if (start === -1 || end === -1 || end < start) {
-    return withoutFences;
-  }
-  return withoutFences.slice(start, end + 1);
-}
-
-export async function generateQuizFromDocument(
-  documentText: string,
-  numQuestions: number = 5
-): Promise<QuizQuestion[]> {
-  const ai = getClient();
-  const context = truncateContext(documentText);
-
- const prompt = `You are an expert academic evaluator creating a practice quiz and memo for a South African student based on the document below. 
-
-CRITICAL CONTENT RULE: Do NOT generate questions about the document's administrative structure, guidelines, total marks, time limits, or page counts. Focus entirely on the core educational content, formulas, or actual questions within the body of the document.
-
-CRITICAL EXPLANATION STYLE RULE (applies to EVERY question, not just math/technical ones):
-The "explanation" field must be SHORT — a maximum of 2 sentences, or the minimal step-by-step working if it's a calculation. No conversational tone, no introductory phrases like "This is correct because..." or "The answer is X, which means...". Do NOT restate the full question or all four options.
-- For mathematical/technical questions: show ONLY the direct working/proof, formatted like a terse exam marking memo (e.g. "2x = 10 → x = 5").
-- For conceptual/factual questions: state ONLY the single key fact or reason that makes the answer correct, in one short sentence.
-If you cannot explain it in 2 sentences or fewer, you are including unnecessary detail — cut it down.
-
-Create exactly ${numQuestions} multiple-choice questions based on this criteria.
-
-DOCUMENT:
-"""
-${context}
-"""
-
-Respond with ONLY valid JSON, no markdown formatting, no code fences, no extra text.
-Use exactly this structure:
-[
-  {
-    "question": "...",
-    "options": ["...", "...", "...", "..."],
-    "correctIndex": 0,
-    "explanation": "..."
-  }
-]
-Each question must have exactly 4 options. correctIndex is the 0-based index of the correct option.`;
-
-  const response = await withRetry(() =>
-    ai.models.generateContent({
-      model: MODEL,
-      contents: prompt,
-    })
-  );
-
-  const raw = response.text ?? "[]";
-  const cleaned = extractJsonArray(raw);
-
-  try {
-    const parsed = JSON.parse(cleaned);
-    if (!Array.isArray(parsed)) throw new Error("Response was not an array");
-    return parsed as QuizQuestion[];
-  } catch (err) {
-    // Log the raw response so we can see exactly what the model sent back
-    // if this still fails — much easier to diagnose than a generic error.
-    console.error("Quiz JSON parse failed. Raw model response was:\n", raw);
-    console.error("Parse error:", err);
-    throw new Error("AI returned an unexpected format. Please try again.");
-  }
 }
