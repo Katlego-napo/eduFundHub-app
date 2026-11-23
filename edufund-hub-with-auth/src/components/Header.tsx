@@ -6,12 +6,15 @@ import { useRouter } from "next/navigation";
 import { Menu, X, Moon, Sun, GraduationCap, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { STUDY_ASSISTANT_ENABLED } from "@/lib/features";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   // { label: "Past Papers", href: "/past-papers" },
   { label: "Quizzes", href: "/quizzes" },
-    { label: "AI Study Assistant", href: "/study-assistant" },
+  ...(STUDY_ASSISTANT_ENABLED
+    ? [{ label: "AI Study Assistant", href: "/study-assistant" }]
+    : []),
   { label: "Bursaries", href: "/bursaries" },
  // { label: "Blog", href: "/blog" },
   { label: "About Us", href: "/about" },
