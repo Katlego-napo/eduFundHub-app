@@ -1,35 +1,42 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { STUDY_ASSISTANT_ENABLED } from "@/lib/features";
+import { createServiceClient } from "@/lib/supabase/service";
+import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!STUDY_ASSISTANT_ENABLED) {
+    return NextResponse.json({ error: "Not available." }, { status: 404 });
+  }
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: userData, error: authError } = await supabase.auth.getUser();
+  const { user, isAdmin } = await getCurrentUserWithRole();
 
-  if (authError || !userData?.user) {
+  if (!user) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
+  if (!isAdmin) {
+    return NextResponse.json(
+      { error: "Only the admin can delete study guides." },
+      { status: 403 }
+    );
+  }
 
-  // Look the document up scoped to this user first — this both confirms
-  // ownership (a user can never delete someone else's document) and gives
-  // us the file_url we need to also remove the file from Storage.
+  const supabase = createServiceClient();
+
   const { data: doc, error: fetchError } = await supabase
     .from("study_documents")
-    .select("id, user_id, file_url")
+    .select("id, file_url")
     .eq("id", id)
-    .eq("user_id", userData.user.id)
     .single();
 
   if (fetchError || !doc) {
-    return NextResponse.json({ error: "Document not found." }, { status: 404 });
+    return NextResponse.json({ error: "Study guide not found." }, { status: 404 });
   }
 
-  // The stored file_url is a public Supabase Storage URL, e.g.
-  // https://xxx.supabase.co/storage/v1/object/public/study-documents/<userId>/<file>.pdf
-  // Pull out everything after the bucket name to get the path within the bucket.
+  // file_url is a public Storage URL; the path inside the bucket is whatever
+  // follows the bucket name.
   const marker = "/study-documents/";
   const idx = doc.file_url.indexOf(marker);
   const storagePath = idx !== -1 ? doc.file_url.slice(idx + marker.length) : null;
@@ -38,19 +45,14 @@ export async function DELETE(
     const { error: storageError } = await supabase.storage
       .from("study-documents")
       .remove([storagePath]);
-
-    // Don't block the delete on a storage error — an orphaned file in
-    // Storage is far less harmful than a document the user can't remove.
-    if (storageError) {
-      console.error("Failed to delete file from storage:", storageError);
-    }
+    // An orphaned file is far less harmful than a guide that can't be removed.
+    if (storageError) console.error("Failed to delete file from storage:", storageError);
   }
 
   const { error: deleteError } = await supabase
     .from("study_documents")
     .delete()
-    .eq("id", id)
-    .eq("user_id", userData.user.id);
+    .eq("id", id);
 
   if (deleteError) {
     return NextResponse.json({ error: deleteError.message }, { status: 500 });
