@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { STUDY_ASSISTANT_ENABLED } from "@/lib/features";
 import { GraduationCap, Mail } from "lucide-react";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -75,7 +76,9 @@ export default function Footer() {
             </h4>
             <ul className="mt-3 space-y-2 text-sm text-muted">
               <li><Link href="/quizzes" className="hover:text-primary">Quizzes</Link></li>
-              <li><Link href="/study-assistant" className="hover:text-primary">AI Study Assistant</Link></li>
+              {STUDY_ASSISTANT_ENABLED && (
+                <li><Link href="/study-assistant" className="hover:text-primary">AI Study Assistant</Link></li>
+              )}
               {/* <li><Link href="/past-papers" className="hover:text-primary">Study Materials</Link></li> */}
               <li><Link href="/bursaries" className="hover:text-primary">Bursaries</Link></li>
               {/* <li><Link href="/blog" className="hover:text-primary">Blog</Link></li>  */}
