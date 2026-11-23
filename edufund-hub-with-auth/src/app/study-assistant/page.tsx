@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
 import { getSubscriptionStatus } from "@/lib/auth/getSubscriptionStatus";
 import Header from "@/components/Header";
@@ -8,12 +9,16 @@ import StudyAssistantClient from "@/components/study-assistant/StudyAssistantCli
 import type { StudyDocument } from "@/lib/types/studyDocument";
 import { Lock, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { STUDY_ASSISTANT_ENABLED } from "@/lib/features";
 
 export const metadata = {
   title: "AI Study Assistant | EduFund Hub",
 };
 
 export default async function StudyAssistantPage() {
+  // Switched off until there is demand — see src/lib/features.ts
+  if (!STUDY_ASSISTANT_ENABLED) notFound();
+
   const supabase = await createClient();
   const { data: userData, error } = await supabase.auth.getUser();
 
@@ -21,12 +26,14 @@ export default async function StudyAssistantPage() {
     redirect("/login");
   }
 
+  const { isAdmin } = await getCurrentUserWithRole();
   const { isSubscribed } = await getSubscriptionStatus();
 
-  const { data } = await supabase
+  // Study guides are uploaded by the admin and shared with all subscribers.
+  // Only id / name / date go to the browser — never the guide text itself.
+  const { data } = await createServiceClient()
     .from("study_documents")
-    .select("*")
-    .eq("user_id", userData.user.id)
+    .select("id, file_name, created_at")
     .order("created_at", { ascending: false });
 
   const documents: StudyDocument[] = data ?? [];
@@ -41,29 +48,26 @@ export default async function StudyAssistantPage() {
               AI Study Assistant
             </h1>
             <p className="mt-2 text-white/75">
-              Upload your notes or a past paper, ask questions, and generate practice quizzes.
+              Ask questions and get answers based on EduFund Hub&apos;s official study guides.
             </p>
           </div>
         </section>
 
         <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
           {isSubscribed ? (
-            <StudyAssistantClient initialDocuments={documents} />
+            <StudyAssistantClient initialDocuments={documents} isAdmin={isAdmin} />
           ) : (
             <div className="relative">
               {/* Blurred preview of what the feature looks like */}
               <div className="pointer-events-none select-none blur-sm opacity-40">
                 <div className="rounded-2xl border border-border bg-surface p-6">
                   <h2 className="font-display text-lg font-semibold text-foreground">
-                    Upload a document to get started
+                    Ask about our study guides
                   </h2>
                   <p className="mt-1 text-sm text-muted">
-                    Upload your notes, a past paper, or a textbook chapter (PDF, max
-                    10MB) and ask questions or generate a practice quiz from it.
+                    Pick a study guide and ask any question. Answers come from the
+                    guide itself.
                   </p>
-                  <div className="mt-4 flex cursor-not-allowed items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-background px-4 py-8 text-sm text-muted">
-                    Click to select a PDF
-                  </div>
                   <div className="mt-4 h-10 w-full rounded-full bg-primary/30" />
                 </div>
 
@@ -95,9 +99,8 @@ export default async function StudyAssistantPage() {
                     Subscribe to unlock
                   </h2>
                   <p className="mt-2 text-sm text-muted">
-                    The AI Study Assistant is available to subscribers. Upload
-                    documents, ask questions, and generate practice quizzes from
-                    your own notes.
+                    The AI Study Assistant is available to subscribers. Ask
+                    questions and get answers based on our study guides.
                   </p>
                   <Link
                     href="/pricing"
