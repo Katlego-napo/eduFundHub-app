@@ -75,9 +75,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-surface/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2">
-         <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
-  <GraduationCap size={20} strokeWidth={2.25} />
-</span>
+  
           <span className="font-display text-lg font-semibold text-foreground">
             EduFund <span className="text-secondary">Hub</span>
           </span>
