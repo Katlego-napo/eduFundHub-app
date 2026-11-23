@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { STUDY_ASSISTANT_ENABLED } from "@/lib/features";
 import { useRouter } from "next/navigation";
 import { Search, FileText, Banknote, Sparkles } from "lucide-react";
 
@@ -65,13 +66,15 @@ export default function Hero() {
           </form>
 
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
-            <a
-              href="/study-assistant"
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-secondary px-6 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02] sm:w-auto"
-            >
-              <Sparkles size={16} />
-              AI Study Assistant
-            </a>
+            {STUDY_ASSISTANT_ENABLED && (
+              <a
+                href="/study-assistant"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-secondary px-6 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02] sm:w-auto"
+              >
+                <Sparkles size={16} />
+                AI Study Assistant
+              </a>
+            )}
             <a
               href="/quizzes"
               className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-primary transition-transform hover:scale-[1.02] sm:w-auto"
