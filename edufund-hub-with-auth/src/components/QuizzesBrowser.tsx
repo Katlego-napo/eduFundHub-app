@@ -80,7 +80,18 @@ export default function QuizzesBrowser({
   useEffect(() => {
     // Non-subscribers (both anonymous and logged-in) share the same
     // one-free-quiz gate tracked in localStorage.
-    if (!isSubscribed) setSampleUsed(hasUsedFreeQuizSample());
+    const used = !isSubscribed ? hasUsedFreeQuizSample() : false;
+    if (!isSubscribed) setSampleUsed(used);
+
+    // Deep link from search (?quiz=ID): open the quiz directly, but only
+    // when the user is actually allowed to take it (subscriber, admin, or
+    // still has their free sample). Otherwise they just land on the list,
+    // where the normal "Subscribe to Unlock" gate applies.
+    if (initialQuizId && (isSubscribed || isAdmin || !used)) {
+      const target = quizzes.find((q) => q.id === initialQuizId);
+      if (target) setActiveQuiz((current) => current ?? target);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSubscribed]);
 
   const subjects = useMemo(
