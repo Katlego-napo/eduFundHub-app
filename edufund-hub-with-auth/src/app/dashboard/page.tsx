@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { STUDY_ASSISTANT_ENABLED } from "@/lib/features";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
@@ -278,7 +279,7 @@ export default async function DashboardPage() {
             <div className="flex items-center gap-2 text-sm text-foreground">
               <Clock size={16} className="text-[#7A5A0A]" />
               <span>
-                Your <strong>1-day free trial</strong> expires in{" "}
+                Your <strong>5-day free trial</strong> expires in{" "}
                 <strong>
                   {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""}
                 </strong>
@@ -456,26 +457,28 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        <Link
-          href="/study-assistant"
-          className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-primary p-6 transition-transform hover:scale-[1.01]"
-        >
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white">
-              <Sparkles size={20} />
-            </span>
-            <div>
-              <p className="font-display font-semibold text-white">AI Study Assistant</p>
-              <p className="text-sm text-white/75">
-                Upload notes or a past paper — ask questions or generate a practice quiz.
-              </p>
+        {STUDY_ASSISTANT_ENABLED && (
+          <Link
+            href="/study-assistant"
+            className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-primary p-6 transition-transform hover:scale-[1.01]"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white">
+                <Sparkles size={20} />
+              </span>
+              <div>
+                <p className="font-display font-semibold text-white">AI Study Assistant</p>
+                <p className="text-sm text-white/75">
+                  Ask questions and get answers from our official study guides.
+                </p>
+              </div>
             </div>
-          </div>
-          <span className="flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-primary">
-            Try it now
-            <ArrowRight size={14} />
-          </span>
-        </Link>
+            <span className="flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-primary">
+              Try it now
+              <ArrowRight size={14} />
+            </span>
+          </Link>
+        )}
 
         <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-2xl border border-border bg-surface p-6">
