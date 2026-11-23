@@ -21,6 +21,7 @@ export default function SubjectTopicBrowser({
   attempted,
   isSubscribed,
   sampleUsed,
+  loginRequired = false,
   grades,
   gradeFilter,
   onGradeChange,
@@ -37,6 +38,8 @@ export default function SubjectTopicBrowser({
   attempted: AttemptedMap;
   isSubscribed: boolean;
   sampleUsed: boolean;
+  /** Logged-out visitors can't take any quiz — send them to log in. */
+  loginRequired?: boolean;
   grades: string[];
   gradeFilter: string;
   onGradeChange: (grade: string) => void;
@@ -174,10 +177,10 @@ export default function SubjectTopicBrowser({
                     )}
                     {locked ? (
                       <a
-                        href="/pricing"
+                        href={loginRequired ? "/login" : "/pricing"}
                         className="rounded-lg bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/15"
                       >
-                        Unlock
+                        {loginRequired ? "Log in to start" : "Unlock"}
                       </a>
                     ) : (
                       <button
