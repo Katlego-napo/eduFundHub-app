@@ -200,7 +200,7 @@ function PricingContent() {
 
       {trialSuccess && (
         <div className="mb-8 rounded-2xl border border-secondary/30 bg-secondary/10 px-5 py-4 text-center text-sm font-medium text-foreground">
-           Your 1-day free trial has started! Redirecting you now...
+           Your 5-day free trial has started! Redirecting you now...
         </div>
       )}
 
@@ -292,7 +292,7 @@ function PricingContent() {
                       {starting && (
                         <Loader2 size={14} className="animate-spin" />
                       )}
-                      Start 1-Day Free Trial
+                      Start 5-Day Free Trial
                     </button>
                     <p className="text-center text-xs text-muted">
                       No credit card required for trial.
@@ -392,10 +392,10 @@ function PricingContent() {
         <div className="mt-4 space-y-4 text-sm text-muted">
           <div>
             <p className="font-medium text-foreground">
-              What does the 1-day free trial include?
+              What does the 5-day free trial include?
             </p>
             <p className="mt-1">
-              Full access to everything — unlimited quizzes, AI Study Assistant,
+              Full access to everything — unlimited quizzes,
               progress tracking, and ranking. No credit card required.
             </p>
           </div>
