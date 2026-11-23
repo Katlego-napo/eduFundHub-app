@@ -70,7 +70,9 @@ export default function QuizzesBrowser({
   );
   const [savingId, setSavingId] = useState<string | null>(null);
   const [attempted, setAttempted] = useState<AttemptedMap>(initialAttemptedQuizzes);
-  const [sampleUsed, setSampleUsed] = useState(false);
+  // Logged-out visitors get no free quiz at all; logged-in non-subscribers
+  // keep the one free sample tracked in localStorage.
+  const [sampleUsed, setSampleUsed] = useState(!isLoggedIn);
   const [view, setView] = useState<"subjects" | "all">("subjects");
   const [activeSubject, setActiveSubject] = useState<string | null>(initialSubject);
   const [activeTopic, setActiveTopic] = useState<string | null>(
@@ -78,21 +80,21 @@ export default function QuizzesBrowser({
   );
 
   useEffect(() => {
-    // Non-subscribers (both anonymous and logged-in) share the same
-    // one-free-quiz gate tracked in localStorage.
-    const used = !isSubscribed ? hasUsedFreeQuizSample() : false;
-    if (!isSubscribed) setSampleUsed(used);
+    // Logged-out visitors can't take quizzes. Logged-in non-subscribers share
+    // the one-free-quiz gate tracked in localStorage.
+    const used = !isLoggedIn ? true : !isSubscribed ? hasUsedFreeQuizSample() : false;
+    setSampleUsed(used);
 
     // Deep link from search (?quiz=ID): open the quiz directly, but only
     // when the user is actually allowed to take it (subscriber, admin, or
     // still has their free sample). Otherwise they just land on the list,
-    // where the normal "Subscribe to Unlock" gate applies.
+    // where the normal lock applies.
     if (initialQuizId && (isSubscribed || isAdmin || !used)) {
       const target = quizzes.find((q) => q.id === initialQuizId);
       if (target) setActiveQuiz((current) => current ?? target);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSubscribed]);
+  }, [isSubscribed, isLoggedIn]);
 
   const subjects = useMemo(
     () => ["All", ...Array.from(new Set(allQuizzes.map((q) => q.subject)))],
@@ -241,25 +243,41 @@ export default function QuizzesBrowser({
       {!isSubscribed && sampleUsed && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-secondary/30 bg-secondary/10 px-5 py-4">
           <p className="text-sm text-foreground">
-            <strong>You&apos;ve tried your free sample quiz!</strong>{" "}
-            {isLoggedIn
-              ? "Subscribe to unlock unlimited quizzes and track your progress."
-              : "Sign up free or subscribe to unlock unlimited quizzes."}
+            {isLoggedIn ? (
+              <>
+                <strong>You&apos;ve tried your free sample quiz!</strong>{" "}
+                Subscribe to unlock unlimited quizzes and track your progress.
+              </>
+            ) : (
+              <>
+                <strong>Log in to take quizzes.</strong>{" "}
+                Create a free account to start your 5-day free trial.
+              </>
+            )}
           </p>
           <div className="flex shrink-0 gap-2">
-            <a
-              href="/pricing"
-              className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-light"
-            >
-              View Plans
-            </a>
-            {!isLoggedIn && (
+            {isLoggedIn ? (
               <a
-                href="/login"
-                className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5"
+                href="/pricing"
+                className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-light"
               >
-                Log In
+                View Plans
               </a>
+            ) : (
+              <>
+                <a
+                  href="/login"
+                  className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-light"
+                >
+                  Log In / Sign Up
+                </a>
+                <a
+                  href="/pricing"
+                  className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5"
+                >
+                  View Plans
+                </a>
+              </>
             )}
           </div>
         </div>
@@ -289,6 +307,7 @@ export default function QuizzesBrowser({
           attempted={attempted}
           isSubscribed={isSubscribed}
           sampleUsed={sampleUsed}
+          loginRequired={!isLoggedIn}
           grades={grades}
           gradeFilter={gradeFilter}
           onGradeChange={setGradeFilter}
@@ -419,11 +438,11 @@ export default function QuizzesBrowser({
                   </button>
                 ) : !isSubscribed && sampleUsed ? (
                   <a
-                    href="/pricing"
+                    href={isLoggedIn ? "/pricing" : "/login"}
                     className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-full bg-primary/10 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/15"
                   >
                     <Lock size={14} />
-                    Subscribe to Unlock
+                    {isLoggedIn ? "Subscribe to Unlock" : "Log in to start"}
                   </a>
                 ) : (
                   <button
