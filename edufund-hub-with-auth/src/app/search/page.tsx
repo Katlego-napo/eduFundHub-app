@@ -3,6 +3,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SearchResultsView from "@/components/SearchResultsView";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getCurrentUserWithRole } from "@/lib/auth/getCurrentUserWithRole";
+import { getSubscriptionStatus } from "@/lib/auth/getSubscriptionStatus";
 import { prepareQuizzes } from "@/lib/quizAccess";
 import type { Quiz } from "@/lib/types/quiz";
 import type { Bursary } from "@/lib/types/bursary";
@@ -19,6 +21,11 @@ export default async function SearchPage({
 }) {
   const { q } = await searchParams;
   const query = (q ?? "").trim();
+
+  // Decides where the "Take Quiz" button sends the visitor.
+  const { user } = await getCurrentUserWithRole();
+  const { isSubscribed } = user ? await getSubscriptionStatus() : { isSubscribed: false };
+  const quizAction: "take" | "trial" | "login" = isSubscribed ? "take" : user ? "trial" : "login";
 
   let quizzes: Quiz[] = [];
   let bursaries: Bursary[] = [];
@@ -67,7 +74,7 @@ export default async function SearchPage({
         </section>
 
         <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-          <SearchResultsView query={query} quizzes={quizzes} bursaries={bursaries} />
+          <SearchResultsView query={query} quizzes={quizzes} bursaries={bursaries} quizAction={quizAction} />
         </section>
       </main>
       <Footer />
