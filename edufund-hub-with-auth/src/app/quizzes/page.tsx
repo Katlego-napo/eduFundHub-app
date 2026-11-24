@@ -4,6 +4,8 @@ import { getSubscriptionStatus } from "@/lib/auth/getSubscriptionStatus";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuizzesBrowser, { type AttemptedMap } from "@/components/QuizzesBrowser";
+import { createServiceClient } from "@/lib/supabase/service";
+import { prepareQuizzes } from "@/lib/quizAccess";
 import type { Quiz } from "@/lib/types/quiz";
 
 export const metadata = {
@@ -21,22 +23,22 @@ export default async function QuizzesPage({
   const supabase = await createClient();
   const { user, isAdmin } = await getCurrentUserWithRole();
 
-  const { data, error } = await supabase
+  // Subscription first: it decides whether question content may be sent.
+  const { isSubscribed } = user
+    ? await getSubscriptionStatus()
+    : { isSubscribed: false };
+
+  // Read with the service client (the browser is not allowed to read quiz
+  // questions directly) and strip the questions server-side for anyone
+  // without access. Admins and active subscribers get the full quiz.
+  const { data, error } = await createServiceClient()
     .from("quizzes")
     .select("*")
     .order("created_at", { ascending: false });
 
-  const quizzes: Quiz[] = error ? [] : (data ?? []);
-
-  // Check subscription — admins always get full access, non-subscribers
-  // (whether logged in or not) get the same one-free-quiz treatment that
-  // anonymous visitors already have via the localStorage gate in
-  // QuizzesBrowser. This means no separate gating logic is needed in this
-  // page for logged-in non-subscribers — QuizzesBrowser already handles it
-  // via the isLoggedIn + sampleUsed flags.
-  const { isSubscribed } = user
-    ? await getSubscriptionStatus()
-    : { isSubscribed: false };
+  const quizzes: Quiz[] = error
+    ? []
+    : prepareQuizzes((data ?? []) as Quiz[], isSubscribed || isAdmin);
 
   let savedQuizIds: string[] = [];
   let attemptedQuizzes: AttemptedMap = {};
