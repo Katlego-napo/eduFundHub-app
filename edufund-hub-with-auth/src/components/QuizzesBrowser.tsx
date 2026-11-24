@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import MathText from "@/components/MathText";
 import DiagramRenderer from "@/components/DiagramRenderer";
 import SubjectTopicBrowser from "@/components/SubjectTopicBrowser";
-import { hasUsedFreeQuizSample, markFreeQuizSampleUsed } from "@/lib/freeQuizSample";
+import { markFreeQuizSampleUsed } from "@/lib/freeQuizSample";
 import type { Quiz } from "@/lib/types/quiz";
 import {
   Search,
@@ -72,7 +72,7 @@ export default function QuizzesBrowser({
   const [attempted, setAttempted] = useState<AttemptedMap>(initialAttemptedQuizzes);
   // Logged-out visitors get no free quiz at all; logged-in non-subscribers
   // keep the one free sample tracked in localStorage.
-  const [sampleUsed, setSampleUsed] = useState(!isLoggedIn);
+  const [sampleUsed, setSampleUsed] = useState(!isSubscribed);
   const [view, setView] = useState<"subjects" | "all">("subjects");
   const [activeSubject, setActiveSubject] = useState<string | null>(initialSubject);
   const [activeTopic, setActiveTopic] = useState<string | null>(
@@ -82,7 +82,9 @@ export default function QuizzesBrowser({
   useEffect(() => {
     // Logged-out visitors can't take quizzes. Logged-in non-subscribers share
     // the one-free-quiz gate tracked in localStorage.
-    const used = !isLoggedIn ? true : !isSubscribed ? hasUsedFreeQuizSample() : false;
+    // Question content is only sent to subscribers/admins, so there is no
+    // free sample any more: everyone else sees the lock.
+    const used = !isSubscribed;
     setSampleUsed(used);
 
     // Deep link from search (?quiz=ID): open the quiz directly, but only
@@ -245,8 +247,8 @@ export default function QuizzesBrowser({
           <p className="text-sm text-foreground">
             {isLoggedIn ? (
               <>
-                <strong>You&apos;ve tried your free sample quiz!</strong>{" "}
-                Subscribe to unlock unlimited quizzes and track your progress.
+                <strong>Quizzes are for subscribers.</strong>{" "}
+                Subscribe or start your free trial to unlock unlimited quizzes and track your progress.
               </>
             ) : (
               <>
@@ -694,7 +696,7 @@ export function QuizTaker({
               </p>
               {isPracticeAttempt && officialResult && (
                 <p className="mt-1 text-xs text-muted">
-                  Practice attempt — not saved. Your official score stays{" "}
+                  Practice attempt not saved. Your official score stays{" "}
                   {officialResult.score}/{officialResult.total}.
                 </p>
               )}
