@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SearchResultsView from "@/components/SearchResultsView";
+import { createServiceClient } from "@/lib/supabase/service";
+import { prepareQuizzes } from "@/lib/quizAccess";
 import type { Quiz } from "@/lib/types/quiz";
 import type { Bursary } from "@/lib/types/bursary";
 
@@ -23,9 +25,10 @@ export default async function SearchPage({
 
   if (query) {
     const supabase = await createClient();
+    const service = createServiceClient();
 
     const [quizzesRes, bursariesRes] = await Promise.all([
-      supabase
+      service
         .from("quizzes")
         .select("*")
         .or(
@@ -41,7 +44,8 @@ export default async function SearchPage({
         .order("closing_date", { ascending: true }),
     ]);
 
-    quizzes = quizzesRes.data ?? [];
+    // Search only needs titles and counts, never question content.
+    quizzes = prepareQuizzes((quizzesRes.data ?? []) as Quiz[], false);
     bursaries = bursariesRes.data ?? [];
   }
 
