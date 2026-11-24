@@ -12,10 +12,12 @@ export default function SearchResultsView({
   query,
   quizzes,
   bursaries,
+  quizAction = "take",
 }: {
   query: string;
   quizzes: Quiz[];
   bursaries: Bursary[];
+  quizAction?: "take" | "trial" | "login";
 }) {
   const router = useRouter();
   const [input, setInput] = useState(query);
@@ -78,7 +80,13 @@ export default function SearchResultsView({
                 {quizzes.map((quiz) => (
                   <Link
                     key={quiz.id}
-                    href={`/quizzes?quiz=${quiz.id}`}
+                    href={
+                      quizAction === "take"
+                        ? `/quizzes?quiz=${quiz.id}`
+                        : quizAction === "trial"
+                          ? "/pricing"
+                          : "/login"
+                    }
                     className="flex flex-col rounded-2xl border border-border bg-surface p-5 transition-shadow hover:shadow-lg hover:shadow-black/5"
                   >
                     <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
@@ -99,7 +107,11 @@ export default function SearchResultsView({
                       {quiz.questions.length} question{quiz.questions.length !== 1 ? "s" : ""}
                     </p>
                     <div className="mt-4 flex items-center justify-center gap-1.5 rounded-full bg-primary py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-light">
-                      Take Quiz
+                      {quizAction === "take"
+                        ? "Take Quiz"
+                        : quizAction === "trial"
+                          ? "Start free trial"
+                          : "Log in to start"}
                     </div>
                   </Link>
                 ))}
